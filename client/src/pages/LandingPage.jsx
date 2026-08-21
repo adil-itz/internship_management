@@ -11,12 +11,15 @@ import Benefits from '../components/Benefits';
 import CTA from '../components/CTA';
 import Footer from '../components/Footer';
 
-export default function LandingPage() {
-  const [darkMode, setDarkMode] = useState(() => {
+export default function LandingPage({ darkMode: propDarkMode, setDarkMode: propSetDarkMode }) {
+  const [localDarkMode, setLocalDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
     if (saved) return saved === 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
+
+  const darkMode = propDarkMode !== undefined ? propDarkMode : localDarkMode;
+  const setDarkMode = propSetDarkMode || setLocalDarkMode;
 
   useEffect(() => {
     if (darkMode) {
