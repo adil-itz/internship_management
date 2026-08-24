@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Briefcase,
   Users,
@@ -233,10 +234,10 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
             ))}
           </div>
 
-          <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 transition-all cursor-pointer">
+          <Link to="/dashboard/student/profile" className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 transition-all cursor-pointer">
             <Sparkles size={14} />
             <span>Update Resume</span>
-          </button>
+          </Link>
         </div>
 
         {/* Tab Content: Applications */}

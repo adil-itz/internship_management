@@ -40,9 +40,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: GraduationCap,
       color: 'blue',
       navItems: [
-        { id: 'applications', label: 'My Applications', icon: Briefcase },
-        { id: 'recommended', label: 'Recommended Jobs', icon: Sparkles },
-        { id: 'mentorship', label: 'Mentorship Calls', icon: Users },
+        { id: 'applications', label: 'My Applications', icon: Briefcase, path: '/dashboard/student' },
+        { id: 'recommended', label: 'Recommended Jobs', icon: Sparkles, path: '/dashboard/student' },
+        { id: 'mentorship', label: 'Mentorship Calls', icon: Users, path: '/dashboard/student' },
+        { id: 'profile', label: 'My Profile', icon: UserCheck, path: '/dashboard/student/profile' },
       ],
     },
     company: {
@@ -156,7 +157,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
                 <button
                   key={item.id}
                   onClick={() => {
-                    if (setActiveTab) setActiveTab(item.id);
+                    if (setActiveTab && (!item.path || window.location.pathname.endsWith('/student') || window.location.pathname.endsWith('/dashboard'))) setActiveTab(item.id);
+                    if (item.path && window.location.pathname !== item.path) {
+                      navigate(item.path);
+                    }
                     setMobileSidebarOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
