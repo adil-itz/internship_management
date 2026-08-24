@@ -27,9 +27,10 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
       setLoading(true);
       const data = await getStudentProfile();
       if (data) {
-        if (!data.skills) data.skills = [];
-        setProfile(data);
-        setEditForm(JSON.parse(JSON.stringify(data)));
+        const profileData = data.profile || data;
+        if (!profileData.skills) profileData.skills = [];
+        setProfile(profileData);
+        setEditForm(JSON.parse(JSON.stringify(profileData)));
       } else {
         setProfile(null);
         setEditForm({ skills: [] });
