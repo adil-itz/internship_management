@@ -7,23 +7,39 @@ import sendEmail from "../utils/sendEmail.js";
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    let user = await User.findOne({ email: email?.toLowerCase() });
-    if (user) {
-      return res.status(400).json({ message: "User already exists" });
+
+    if (role === "admin") {
+      return res.status(403).json({
+        message: "Admin account cannot be created through signup",
+      });
     }
-    
+
+    let user = await User.findOne({
+      email: email?.toLowerCase(),
+    });
+
+    if (user) {
+      return res.status(400).json({
+        message: "User already exists",
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     user = await User.create({
       name,
       email: email?.toLowerCase(),
       password: hashedPassword,
-      role: role || "student"
+      role: role || "student",
     });
-    
-    res.status(201).json({ message: "User created successfully. Please login." });
+
+    res.status(201).json({
+      message: "User created successfully. Please login.",
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
@@ -73,8 +89,6 @@ export const forgotPassword = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "No account found with this email address" });
     }
-
-    // Generate 6-digit OTP
     const otp = generateOtp();
     const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // Valid for 15 minutes
 
@@ -82,7 +96,6 @@ export const forgotPassword = async (req, res) => {
     user.resetOtpExpires = otpExpires;
     await user.save();
 
-    // Send email with OTP
     const emailResult = await sendEmail({
       to: user.email,
       subject: "InternFlow - Password Reset OTP",
@@ -159,8 +172,7 @@ export const resetPassword = async (req, res) => {
     if (new Date() > new Date(user.resetOtpExpires)) {
       return res.status(400).json({ message: "OTP has expired. Please request a new one." });
     }
-
-    // Hash new password and save
+    
     const hashedPassword = await bcrypt.hash(finalPassword, 10);
     user.password = hashedPassword;
     user.resetOtp = undefined;

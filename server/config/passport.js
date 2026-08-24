@@ -1,10 +1,14 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import User from "../models/User.js";
 import dotenv from "dotenv";
+import User from "../models/User.js";
+import path from "path";
+import { fileURLToPath } from "url";
 
-dotenv.config({ path: "./server/.env" });
-dotenv.config({ path: "./.env" });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 passport.use(
   new GoogleStrategy(
@@ -34,7 +38,7 @@ passport.use(
             name: profile.displayName,
             email,
             avatar,
-            role: "candidate",
+            role: "student",
             isVerified: true,
             approvalStatus: "approved",
           });
