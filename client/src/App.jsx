@@ -7,6 +7,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import StudentProfile from './pages/StudentProfile';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -48,6 +49,15 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/dashboard/student/profile"
+          element={
+            <ProtectedRoute>
+              <StudentProfile darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
