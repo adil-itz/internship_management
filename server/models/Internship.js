@@ -2,18 +2,38 @@ import mongoose from "mongoose";
 
 const internshipSchema = new mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     title: { type: String, required: true },
-    company: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Referencing company User
     description: { type: String, required: true },
-    requirements: [{ type: String }],
-    skillsRequired: [{ type: String }],
+    domain: { type: String, required: true },
+    skills: [{ type: String, required: true }],
+    internshipType: { type: String, required: true },
     location: { type: String, required: true },
-    duration: { type: String, required: true }, // e.g., '3 months', '6 months'
-    stipend: { type: String }, 
-    type: { type: String, enum: ["On-site", "Remote", "Hybrid"], default: "On-site" },
-    status: { type: String, enum: ["Open", "Closed"], default: "Open" },
-    applicantsCount: { type: Number, default: 0 },
-    deadline: { type: Date },
+    workMode: { type: String, required: true },
+    duration: { type: String, required: true },
+    stipend: { type: Number, default: 0 },
+    stipendType: { type: String },
+    openings: { type: Number, required: true },
+    startDate: { type: Date },
+    applicationDeadline: { type: Date, required: true },
+    eligibility: {
+      degree: [{ type: String }],
+      branches: [{ type: String }],
+      graduationYears: [{ type: Number }],
+      minimumCGPA: { type: Number, min: 0, max: 10 },
+    },
+    responsibilities: [{ type: String }],
+    requirements: [{ type: String }],
+    benefits: [{ type: String }],
+    status: {
+      type: String,
+      enum: ["draft", "published", "closed"],
+      default: "published",
+    },
   },
   { timestamps: true }
 );

@@ -4,6 +4,7 @@ import cors from "cors";
 import connectDB from "./server/config/db.js";
 import authRoutes from "./server/routes/auth.routes.js";
 import studentRoutes from "./server/routes/student.routes.js";
+import internshipRoutes from "./server/routes/internship.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -41,6 +42,7 @@ connectDB();
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
+app.use("/api/internships", internshipRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));
