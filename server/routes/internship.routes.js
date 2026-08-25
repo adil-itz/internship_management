@@ -3,6 +3,7 @@ import {
   createInternship,
   getInternships,
   getCompanyInternships,
+  getAllInternshipsAdmin,
   getInternshipById,
   updateInternship,
   deleteInternship,
@@ -14,8 +15,10 @@ const router = express.Router();
 router.post("/", protect, authorizeRoles("company"), createInternship);
 router.get("/", protect, getInternships);
 router.get("/company/my", protect, authorizeRoles("company"), getCompanyInternships);
+router.get("/admin/all", protect, authorizeRoles("admin"), getAllInternshipsAdmin);
 router.get("/:id", protect, getInternshipById);
-router.put("/:id", protect, authorizeRoles("company"), updateInternship);
-router.delete("/:id", protect, authorizeRoles("company"), deleteInternship);
+router.put("/:id", protect, authorizeRoles("company", "admin"), updateInternship);
+router.delete("/:id", protect, authorizeRoles("company", "admin"), deleteInternship);
 
 export default router;
+

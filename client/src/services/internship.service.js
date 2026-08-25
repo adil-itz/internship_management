@@ -59,6 +59,25 @@ export const getCompanyInternships = async () => {
   return response.json();
 };
 
+export const getAllInternshipsAdmin = async () => {
+  const response = await fetch('/api/internships/admin/all', {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    let errMsg = 'Failed to fetch all internships for admin';
+    try {
+      const errData = await response.json();
+      if (errData.message) errMsg = errData.message;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  return response.json();
+};
+
+
 export const createInternship = async (data) => {
   const response = await fetch('/api/internships', {
     method: 'POST',
