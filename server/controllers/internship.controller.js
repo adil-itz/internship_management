@@ -1,8 +1,5 @@
 import Internship from "../models/Internship.js";
 
-// @desc    Create a new internship
-// @route   POST /api/internships
-// @access  Private (Company only)
 export const createInternship = async (req, res) => {
   try {
     const {
@@ -26,7 +23,6 @@ export const createInternship = async (req, res) => {
       status,
     } = req.body;
 
-    // Validation
     if (!title || !description || !domain || !skills || !internshipType || !location || !workMode || !duration || !openings || !applicationDeadline) {
       return res.status(400).json({ message: "Invalid internship data" });
     }
@@ -78,9 +74,6 @@ export const createInternship = async (req, res) => {
   }
 };
 
-// @desc    Get all published internships
-// @route   GET /api/internships
-// @access  Private
 export const getInternships = async (req, res) => {
   try {
     const internships = await Internship.find({ status: "published" })
@@ -97,9 +90,6 @@ export const getInternships = async (req, res) => {
   }
 };
 
-// @desc    Get own internships for logged-in company
-// @route   GET /api/internships/company/my
-// @access  Private (Company only)
 export const getCompanyInternships = async (req, res) => {
   try {
     const internships = await Internship.find({ company: req.user.id }).sort({
@@ -116,9 +106,22 @@ export const getCompanyInternships = async (req, res) => {
   }
 };
 
-// @desc    Get single internship details
-// @route   GET /api/internships/:id
-// @access  Private
+export const getAllInternshipsAdmin = async (req, res) => {
+  try {
+    const internships = await Internship.find({})
+      .populate("company", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: internships.length,
+      internships,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const getInternshipById = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.id).populate(
@@ -130,9 +133,11 @@ export const getInternshipById = async (req, res) => {
       return res.status(404).json({ message: "Internship not found" });
     }
     
-    // Only return draft/closed if the user is the company who created it
-    if (internship.status !== "published" && internship.company._id.toString() !== req.user.id) {
-       // Returning not found instead of forbidden hides its existence
+    if (
+      internship.status !== "published" &&
+      internship.company._id.toString() !== req.user.id &&
+      req.user.role !== "admin"
+    ) {
        return res.status(404).json({ message: "Internship not found" });
     }
 
@@ -145,9 +150,6 @@ export const getInternshipById = async (req, res) => {
   }
 };
 
-// @desc    Update internship
-// @route   PUT /api/internships/:id
-// @access  Private (Company only)
 export const updateInternship = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.id);
@@ -156,8 +158,7 @@ export const updateInternship = async (req, res) => {
       return res.status(404).json({ message: "Internship not found" });
     }
 
-    // Verify ownership
-    if (internship.company.toString() !== req.user.id) {
+    if (internship.company.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({
         message: "You are not authorized to modify this internship",
       });
@@ -167,7 +168,7 @@ export const updateInternship = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    );
+    ).populate("company", "name email");
 
     res.json({ success: true, internship: updatedInternship });
   } catch (error) {
@@ -175,9 +176,6 @@ export const updateInternship = async (req, res) => {
   }
 };
 
-// @desc    Delete internship
-// @route   DELETE /api/internships/:id
-// @access  Private (Company only)
 export const deleteInternship = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.id);
@@ -186,8 +184,7 @@ export const deleteInternship = async (req, res) => {
       return res.status(404).json({ message: "Internship not found" });
     }
 
-    // Verify ownership
-    if (internship.company.toString() !== req.user.id) {
+    if (internship.company.toString() !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({
         message: "You are not authorized to modify this internship",
       });

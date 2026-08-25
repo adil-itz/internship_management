@@ -99,6 +99,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       color: 'blue',
       navItems: [
         { id: 'users', label: 'User Directory', icon: Users, badge: '12.4k' },
+        { id: 'internships', label: 'Manage Internships', icon: Briefcase },
         { id: 'verifications', label: 'Verification Queue', icon: ShieldCheck, badge: '2' },
       ],
     },
