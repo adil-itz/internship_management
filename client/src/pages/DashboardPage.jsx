@@ -31,16 +31,16 @@ export default function DashboardPage({ darkMode, setDarkMode, roleOverride }) {
       }
     }
 
-    // 2. Read user from localStorage or sessionStorage
-    const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-    if (savedUser) {
+    // 2. Read user from sessionStorage or localStorage
+    const savedUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+    if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         console.error('Failed to parse user session', e);
       }
     } else {
-      // Demo fallback user if none stored
+      // Fallback demo user
       setUser({
         name: 'Demo User',
         email: 'user@example.com',

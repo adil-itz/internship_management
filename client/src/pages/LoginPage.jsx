@@ -87,9 +87,13 @@ export default function LoginPage({ darkMode, setDarkMode }) {
       }
 
       if (rememberMe) {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
       } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         sessionStorage.setItem('token', data.token);
         sessionStorage.setItem('user', JSON.stringify(data.user));
       }

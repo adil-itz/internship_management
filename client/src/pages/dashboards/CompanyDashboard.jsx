@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Building2,
   Users,
@@ -21,11 +22,34 @@ import {
   Award,
   Zap,
   Check,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { getCompanyInternships } from '../../services/internship.service';
 
 export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('postings');
+  const [realPostings, setRealPostings] = useState([]);
+  const [loadingRealPostings, setLoadingRealPostings] = useState(false);
+
+  useEffect(() => {
+    const fetchRealPostings = async () => {
+      setLoadingRealPostings(true);
+      try {
+        const res = await getCompanyInternships();
+        if (res && res.success) {
+          setRealPostings(res.internships || []);
+        }
+      } catch (err) {
+        console.error('Failed to load company postings for dashboard:', err);
+      } finally {
+        setLoadingRealPostings(false);
+      }
+    };
+    fetchRealPostings();
+  }, []);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [jobTitle, setJobTitle] = useState('');
@@ -153,13 +177,13 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
+            <Link
+              to="/company/internships/create"
               className="px-5 py-3 text-xs font-extrabold text-slate-900 bg-white hover:bg-blue-50 rounded-2xl shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 group hover:scale-105"
             >
               <PlusCircle size={18} className="text-blue-600 group-hover:rotate-90 transition-transform" />
-              <span>Post New Internship</span>
-            </button>
+              <span>+ Create Internship</span>
+            </Link>
           </div>
 
           <div className="absolute -right-10 -bottom-10 w-72 h-72 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -176,7 +200,9 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-3xl font-black text-slate-900 dark:text-white">
-                {postings.filter((p) => p.status === 'Active').length}
+                {realPostings.length > 0
+                  ? realPostings.filter((p) => p.status === 'published').length
+                  : postings.filter((p) => p.status === 'Active').length}
               </span>
               <span className="text-xs font-extrabold text-blue-500 flex items-center gap-0.5 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 <TrendingUp size={12} /> Live
@@ -252,62 +278,124 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
 
         {/* Tab 1: Postings Table */}
         {activeTab === 'postings' && (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-2xs space-y-4">
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <Briefcase size={16} className="text-emerald-500" />
-                <span>Active & Past Job Listings</span>
+                <span>Active & Created Internship Listings</span>
               </h3>
-              <span className="text-xs font-bold text-slate-400">{postings.length} total listings</span>
+              <Link
+                to="/company/internships"
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+              >
+                <span>Manage All ({realPostings.length || postings.length})</span>
+                <ChevronRight size={14} />
+              </Link>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
-                    <th className="py-4 px-5">Job Title</th>
-                    <th className="py-4 px-5">Location</th>
-                    <th className="py-4 px-5">Stipend</th>
-                    <th className="py-4 px-5">Posted Date</th>
-                    <th className="py-4 px-5">Applicants</th>
-                    <th className="py-4 px-5">Status</th>
-                    <th className="py-4 px-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-                  {postings.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
-                      <td className="py-4 px-5 font-extrabold text-slate-900 dark:text-white text-sm">{p.title}</td>
-                      <td className="py-4 px-5 text-slate-600 dark:text-slate-300 font-semibold">{p.location}</td>
-                      <td className="py-4 px-5 font-black text-slate-900 dark:text-white">{p.stipend}</td>
-                      <td className="py-4 px-5 text-slate-500 font-medium">{p.postedDate}</td>
-                      <td className="py-4 px-5 font-black text-emerald-600 dark:text-emerald-400">
-                        {p.applicantsCount} candidates
-                      </td>
-                      <td className="py-4 px-5">
-                        <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-black border ${
-                            p.status === 'Active'
-                              ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-200 dark:border-emerald-800'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-5 text-right space-x-2">
-                        <button
-                          onClick={() => setActiveTab('applicants')}
-                          className="px-3 py-1.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
-                        >
-                          Review Queue
-                        </button>
-                      </td>
+            {realPostings.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                      <th className="py-4 px-5">Job Title</th>
+                      <th className="py-4 px-5">Domain</th>
+                      <th className="py-4 px-5">Location</th>
+                      <th className="py-4 px-5">Stipend</th>
+                      <th className="py-4 px-5">Status</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                    {realPostings.map((p) => (
+                      <tr key={p._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                        <td className="py-4 px-5 font-extrabold text-slate-900 dark:text-white text-sm">{p.title}</td>
+                        <td className="py-4 px-5 text-slate-600 dark:text-slate-300 font-semibold">{p.domain}</td>
+                        <td className="py-4 px-5 text-slate-600 dark:text-slate-300 font-semibold">{p.location} ({p.workMode})</td>
+                        <td className="py-4 px-5 font-black text-slate-900 dark:text-white">
+                          {p.stipend && p.stipend > 0 ? `₹${p.stipend.toLocaleString('en-IN')}` : 'Unpaid'}
+                        </td>
+                        <td className="py-4 px-5">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-black border capitalize ${
+                              p.status === 'published'
+                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-200 dark:border-emerald-800'
+                                : p.status === 'draft'
+                                ? 'bg-amber-50 dark:bg-amber-950 text-amber-600 border-amber-200 dark:border-amber-800'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-5 text-right space-x-2">
+                          <Link
+                            to={`/student/internships/${p._id}`}
+                            className="px-3 py-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl transition-all"
+                          >
+                            View
+                          </Link>
+                          <Link
+                            to={`/company/internships/${p._id}/edit`}
+                            className="px-3 py-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 rounded-xl transition-all"
+                          >
+                            Edit
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                      <th className="py-4 px-5">Job Title</th>
+                      <th className="py-4 px-5">Location</th>
+                      <th className="py-4 px-5">Stipend</th>
+                      <th className="py-4 px-5">Posted Date</th>
+                      <th className="py-4 px-5">Applicants</th>
+                      <th className="py-4 px-5">Status</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                    {postings.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                        <td className="py-4 px-5 font-extrabold text-slate-900 dark:text-white text-sm">{p.title}</td>
+                        <td className="py-4 px-5 text-slate-600 dark:text-slate-300 font-semibold">{p.location}</td>
+                        <td className="py-4 px-5 font-black text-slate-900 dark:text-white">{p.stipend}</td>
+                        <td className="py-4 px-5 text-slate-500 font-medium">{p.postedDate}</td>
+                        <td className="py-4 px-5 font-black text-emerald-600 dark:text-emerald-400">
+                          {p.applicantsCount} candidates
+                        </td>
+                        <td className="py-4 px-5">
+                          <span
+                            className={`px-3 py-1 rounded-full text-[10px] font-black border ${
+                              p.status === 'Active'
+                                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-200 dark:border-emerald-800'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-5 text-right space-x-2">
+                          <button
+                            onClick={() => setActiveTab('applicants')}
+                            className="px-3 py-1.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
+                          >
+                            Review Queue
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
