@@ -8,6 +8,11 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import StudentProfile from './pages/StudentProfile';
+import StudentInternships from './pages/student/StudentInternships';
+import InternshipDetailsPage from './pages/student/InternshipDetailsPage';
+import CompanyInternships from './pages/company/CompanyInternships';
+import CreateInternship from './pages/company/CreateInternship';
+import EditInternship from './pages/company/EditInternship';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -56,8 +61,52 @@ function App() {
         <Route
           path="/dashboard/student/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['student']}>
               <StudentProfile darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Student Internship Routes */}
+        <Route
+          path="/student/internships"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentInternships darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/internships/:id"
+          element={
+            <ProtectedRoute>
+              <InternshipDetailsPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Company Internship Routes */}
+        <Route
+          path="/company/internships"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyInternships darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/internships/create"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CreateInternship darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/internships/:id/edit"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <EditInternship darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />

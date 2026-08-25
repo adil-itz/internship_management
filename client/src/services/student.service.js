@@ -1,5 +1,5 @@
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
   return {
     'Authorization': `Bearer ${token}`
   };

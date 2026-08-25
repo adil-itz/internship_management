@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Briefcase,
@@ -25,12 +25,38 @@ import {
   Zap,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import InternshipCard from '../../components/internship/InternshipCard';
+import ApplyComingSoonModal from '../../components/internship/ApplyComingSoonModal';
+import { getInternships } from '../../services/internship.service';
 
 export default function StudentDashboard({ darkMode, setDarkMode, user }) {
   const [activeTab, setActiveTab] = useState('applications');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
+  // Real backend internships
+  const [realInternships, setRealInternships] = useState([]);
+  const [loadingInternships, setLoadingInternships] = useState(false);
+  const [comingSoonModalOpen, setComingSoonModalOpen] = useState(false);
+  const [selectedTitle, setSelectedTitle] = useState('');
+
+  useEffect(() => {
+    const loadRealInternships = async () => {
+      setLoadingInternships(true);
+      try {
+        const res = await getInternships();
+        if (res && res.success) {
+          setRealInternships(res.internships || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch internships for student dashboard:', err);
+      } finally {
+        setLoadingInternships(false);
+      }
+    };
+    loadRealInternships();
+  }, []);
+
   // Modals state
   const [selectedApp, setSelectedApp] = useState(null);
   const [selectedJobToApply, setSelectedJobToApply] = useState(null);
@@ -190,7 +216,7 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
   return (
     <DashboardLayout activeTab={activeTab} setActiveTab={setActiveTab} user={user} darkMode={darkMode} setDarkMode={setDarkMode}>
       <div className="space-y-8">
-        
+
         {/* Welcome Header */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-700 p-6 sm:p-8 text-white shadow-xl shadow-blue-600/20">
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -302,11 +328,10 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2.5 text-xs font-extrabold rounded-2xl transition-all cursor-pointer shrink-0 ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
+                className={`px-4 py-2.5 text-xs font-extrabold rounded-2xl transition-all cursor-pointer shrink-0 ${activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
               >
                 {tab.label}
               </button>
@@ -322,7 +347,7 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
         {/* Tab 1: Applications */}
         {activeTab === 'applications' && (
           <div className="space-y-4">
-            
+
             {/* Filter and Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
               <div className="relative w-full sm:w-80">
@@ -342,11 +367,10 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-3.5 py-1.5 text-[11px] font-extrabold rounded-xl capitalize shrink-0 cursor-pointer transition-all ${
-                      filterStatus === status
-                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-                    }`}
+                    className={`px-3.5 py-1.5 text-[11px] font-extrabold rounded-xl capitalize shrink-0 cursor-pointer transition-all ${filterStatus === status
+                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                      }`}
                   >
                     {status}
                   </button>
@@ -409,67 +433,94 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
 
         {/* Tab 2: Recommended Internships */}
         {activeTab === 'recommended' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {recommendedJobs.map((job) => {
-              const isApplied = appliedJobIds.includes(job.id);
-              return (
-                <div
-                  key={job.id}
-                  className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xl transition-all flex flex-col justify-between space-y-4 group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <span className="px-2.5 py-1 rounded-xl text-[10px] font-black bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                        {job.type}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                        <Zap size={11} /> {job.matchScore} Match
-                      </span>
-                    </div>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-400" />
+                <span>Live Published Opportunities</span>
+              </h3>
+              <Link
+                to="/student/internships"
+                className="px-4 py-2 text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950 rounded-xl hover:bg-blue-100 transition-all flex items-center gap-1"
+              >
+                <span>View All Internships</span>
+                <ChevronRight size={14} />
+              </Link>
+            </div>
 
-                    <div>
-                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                        {job.title}
-                      </h3>
-                      <p className="text-xs font-semibold text-slate-400">{job.company}</p>
-                    </div>
+            {realInternships.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {realInternships.slice(0, 6).map((item) => (
+                  <InternshipCard
+                    key={item._id}
+                    internship={item}
+                    onApplyNow={() => {
+                      setSelectedTitle(item.title);
+                      setComingSoonModalOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {recommendedJobs.map((job) => {
+                  const isApplied = appliedJobIds.includes(job.id);
+                  return (
+                    <div
+                      key={job.id}
+                      className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xl transition-all flex flex-col justify-between space-y-4 group"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <span className="px-2.5 py-1 rounded-xl text-[10px] font-black bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                            {job.type}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                            <Zap size={11} /> {job.matchScore} Match
+                          </span>
+                        </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
-                      {job.description}
-                    </p>
+                        <div>
+                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                            {job.title}
+                          </h3>
+                          <p className="text-xs font-semibold text-slate-400">{job.company}</p>
+                        </div>
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {job.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                        <p className="text-xs text-slate-600 dark:text-slate-300 line-clamp-2 leading-relaxed">
+                          {job.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {job.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span className="text-sm font-black text-slate-900 dark:text-white">{job.stipend}</span>
+                        <button
+                          onClick={() => {
+                            setSelectedTitle(job.title);
+                            setComingSoonModalOpen(true);
+                          }}
+                          className="px-4 py-2 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                         >
-                          {tag}
-                        </span>
-                      ))}
+                          <span>Apply Now</span>
+                          <ArrowUpRight size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-sm font-black text-slate-900 dark:text-white">{job.stipend}</span>
-                    
-                    {isApplied ? (
-                      <span className="px-3.5 py-2 text-xs font-extrabold text-emerald-600 bg-emerald-50 dark:bg-emerald-950 rounded-2xl flex items-center gap-1">
-                        <CheckCircle2 size={14} /> Applied
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => setSelectedJobToApply(job)}
-                        className="px-4 py-2 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span>Apply Now</span>
-                        <ArrowUpRight size={14} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -493,7 +544,7 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
                     </div>
 
                     <h4 className="font-extrabold text-lg text-slate-900 dark:text-white">{m.topic}</h4>
-                    
+
                     <div className="flex items-center gap-3.5 pt-2">
                       <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white font-black text-sm shadow-md">
                         {m.mentor.charAt(0)}
@@ -691,6 +742,12 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
             </div>
           </div>
         )}
+
+        <ApplyComingSoonModal
+          isOpen={comingSoonModalOpen}
+          onClose={() => setComingSoonModalOpen(false)}
+          internshipTitle={selectedTitle}
+        />
 
       </div>
     </DashboardLayout>

@@ -39,9 +39,24 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
   const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Determine current active role from route params or user state
-  const currentPathRole = location.pathname.split('/')[2];
-  const role = currentPathRole || user?.role || 'student';
+  // Derive stored user if prop is missing
+  const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
+  let activeUser = user;
+  if (!activeUser && sessionUserStr && sessionUserStr !== 'undefined' && sessionUserStr !== 'null') {
+    try {
+      activeUser = JSON.parse(sessionUserStr);
+    } catch (e) {}
+  }
+
+  // Determine current active role from route path or activeUser state
+  const pathFirst = location.pathname.split('/')[1];
+  const pathSecond = location.pathname.split('/')[2];
+  const role =
+    pathFirst === 'company' || pathSecond === 'company'
+      ? 'company'
+      : pathFirst === 'student' || pathSecond === 'student'
+      ? 'student'
+      : activeUser?.role || 'student';
 
   const roleConfigs = {
     student: {
@@ -50,8 +65,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: GraduationCap,
       color: 'blue',
       navItems: [
-        { id: 'applications', label: 'My Applications', icon: Briefcase, path: '/dashboard/student' },
-        { id: 'recommended', label: 'Recommended Jobs', icon: Sparkles, path: '/dashboard/student' },
+        { id: 'internships', label: 'Explore Internships', icon: Briefcase, path: '/student/internships' },
+        { id: 'applications', label: 'My Applications', icon: Sparkles, path: '/dashboard/student' },
         { id: 'mentorship', label: 'Mentorship Calls', icon: Users, path: '/dashboard/student' },
         { id: 'profile', label: 'My Profile', icon: UserCheck, path: '/dashboard/student/profile' },
       ],
@@ -62,8 +77,9 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: Building2,
       color: 'blue',
       navItems: [
-        { id: 'postings', label: 'Internship Listings', icon: Briefcase, badge: '3' },
-        { id: 'applicants', label: 'Applicant Queue', icon: Users, badge: '12' },
+        { id: 'manage-internships', label: 'Manage Internships', icon: Briefcase, path: '/company/internships' },
+        { id: 'create-internship', label: '+ Post Internship', icon: Sparkles, path: '/company/internships/create' },
+        { id: 'postings', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/company' },
       ],
     },
     mentor: {
@@ -247,12 +263,12 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  {activeUser?.name ? activeUser.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 {!isSidebarCollapsed && (
                   <div className="min-w-0">
                     <p className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
-                      {user?.name || 'Authenticated User'}
+                      {activeUser?.name || 'Authenticated User'}
                     </p>
                     <p className="text-[10px] text-slate-400 truncate capitalize font-medium">{role} Account</p>
                   </div>
