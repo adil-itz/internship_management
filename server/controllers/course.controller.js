@@ -72,7 +72,15 @@ export const getCourses = async (req, res) => {
     if (req.query.level) query.level = req.query.level;
 
     if (req.query.search) {
-      query.$text = { $search: req.query.search };
+      const searchRegex = new RegExp(req.query.search.trim(), "i");
+      query.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { domain: searchRegex },
+        { skills: searchRegex },
+        { "modules.title": searchRegex },
+        { "modules.description": searchRegex },
+      ];
     }
 
     let sortObj = { createdAt: -1 };
@@ -80,16 +88,9 @@ export const getCourses = async (req, res) => {
     else if (req.query.sort === "title") sortObj = { title: 1 };
     else if (req.query.sort === "newest") sortObj = { createdAt: -1 };
 
-    if (req.query.search && !req.query.sort) {
-      sortObj = { score: { $meta: "textScore" } };
-    }
-
     const total = await Course.countDocuments(query);
     
     let coursesQuery = Course.find(query);
-    if (req.query.search && !req.query.sort) {
-       coursesQuery = coursesQuery.select({ score: { $meta: "textScore" } });
-    }
     
     const courses = await coursesQuery
       .sort(sortObj)
