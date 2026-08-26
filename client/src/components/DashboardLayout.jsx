@@ -30,6 +30,7 @@ import {
   CheckCircle2,
   Sliders,
   ExternalLink,
+  BookOpen,
 } from 'lucide-react';
 
 export default function DashboardLayout({ children, user, darkMode, setDarkMode, activeTab, setActiveTab }) {
@@ -39,7 +40,6 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
   const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
-  // Derive stored user if prop is missing
   const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
   let activeUser = user;
   if (!activeUser && sessionUserStr && sessionUserStr !== 'undefined' && sessionUserStr !== 'null') {
@@ -48,7 +48,6 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
     } catch (e) {}
   }
 
-  // Determine current active role from route path or activeUser state
   const pathFirst = location.pathname.split('/')[1];
   const pathSecond = location.pathname.split('/')[2];
   const role =
@@ -56,6 +55,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       ? 'company'
       : pathFirst === 'student' || pathSecond === 'student'
       ? 'student'
+      : pathFirst === 'mentor' || pathSecond === 'mentor'
+      ? 'mentor'
+      : pathFirst === 'admin' || pathSecond === 'admin'
+      ? 'admin'
       : activeUser?.role || 'student';
 
   const roleConfigs = {
@@ -65,10 +68,18 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: GraduationCap,
       color: 'blue',
       navItems: [
-        { id: 'internships', label: 'Explore Internships', icon: Briefcase, path: '/student/internships' },
-        { id: 'applications', label: 'My Applications', icon: Sparkles, path: '/dashboard/student' },
-        { id: 'mentorship', label: 'Mentorship Calls', icon: Users, path: '/dashboard/student' },
+        { id: 'applications', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/student' },
         { id: 'profile', label: 'My Profile', icon: UserCheck, path: '/dashboard/student/profile' },
+        { id: 'internships', label: 'Explore Internships', icon: Briefcase, path: '/student/internships' },
+        {
+          id: 'learning-hub',
+          label: 'Learning Hub',
+          isGroup: true,
+          subItems: [
+            { id: 'resources', label: 'Resource Exploration', icon: Video, path: '/student/resources' },
+            { id: 'courses', label: 'Courses', icon: BookOpen, path: '/student/courses' },
+          ],
+        },
       ],
     },
     company: {
@@ -77,9 +88,9 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: Building2,
       color: 'blue',
       navItems: [
+        { id: 'postings', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/company' },
         { id: 'manage-internships', label: 'Manage Internships', icon: Briefcase, path: '/company/internships' },
         { id: 'create-internship', label: '+ Post Internship', icon: Sparkles, path: '/company/internships/create' },
-        { id: 'postings', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/company' },
       ],
     },
     mentor: {
@@ -88,8 +99,18 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: UserCheck,
       color: 'blue',
       navItems: [
-        { id: 'sessions', label: '1-on-1 Sessions', icon: Video, badge: '2' },
-        { id: 'mentees', label: 'Assigned Mentees', icon: Users, badge: '8' },
+        { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/mentor' },
+        { id: 'sessions', label: '1-on-1 Sessions', icon: Video, badge: '2', path: '/dashboard/mentor' },
+        { id: 'mentees', label: 'Assigned Mentees', icon: Users, badge: '8', path: '/dashboard/mentor' },
+        {
+          id: 'learning-hub',
+          label: 'Learning Hub',
+          isGroup: true,
+          subItems: [
+            { id: 'resources', label: 'Resources', icon: Video, path: '/mentor/resources' },
+            { id: 'courses', label: 'Courses', icon: BookOpen, path: '/mentor/courses' },
+          ],
+        },
       ],
     },
     admin: {
@@ -98,9 +119,18 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: ShieldAlert,
       color: 'blue',
       navItems: [
-        { id: 'users', label: 'User Directory', icon: Users, badge: '12.4k' },
-        { id: 'internships', label: 'Manage Internships', icon: Briefcase },
-        { id: 'verifications', label: 'Verification Queue', icon: ShieldCheck, badge: '2' },
+        { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/admin' },
+        { id: 'users', label: 'User Directory', icon: Users, badge: '12.4k', path: '/dashboard/admin' },
+        { id: 'internships', label: 'Manage Internships', icon: Briefcase, path: '/dashboard/admin' },
+        {
+          id: 'learning-hub',
+          label: 'Learning Hub',
+          isGroup: true,
+          subItems: [
+            { id: 'resources', label: 'Resources', icon: Video, path: '/admin/resources' },
+            { id: 'courses', label: 'Courses', icon: BookOpen, path: '/admin/courses' },
+          ],
+        },
       ],
     },
   };
@@ -185,13 +215,52 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
           <nav className="flex-1 px-3 py-2 space-y-1">
             {!isSidebarCollapsed && (
               <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Dashboard Modules
+                Navigation Menu
               </div>
             )}
 
             {currentRole.navItems.map((item) => {
+              if (item.isGroup) {
+                return (
+                  <div key={item.id} className="space-y-1 pt-2">
+                    {!isSidebarCollapsed && (
+                      <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                        <BookOpen size={12} />
+                        <span>{item.label}</span>
+                      </div>
+                    )}
+                    {item.subItems.map((sub) => {
+                      const SubIcon = sub.icon;
+                      const isSubSelected = location.pathname.startsWith(sub.path);
+                      return (
+                        <button
+                          key={sub.id}
+                          onClick={() => {
+                            navigate(sub.path);
+                            setMobileSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center ${
+                            isSidebarCollapsed ? 'justify-center py-2.5' : 'px-3.5 py-2'
+                          } rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+                            isSubSelected
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-black'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                          title={sub.label}
+                        >
+                          <div className="flex items-center gap-3">
+                            <SubIcon size={16} className={isSubSelected ? 'text-white' : 'text-slate-400'} />
+                            {!isSidebarCollapsed && <span>{sub.label}</span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
               const ItemIcon = item.icon;
-              const isSelected = activeTab === item.id;
+              const isSelected = activeTab === item.id || (item.path && location.pathname === item.path);
               return (
                 <button
                   key={item.id}

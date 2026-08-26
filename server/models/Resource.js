@@ -15,9 +15,9 @@ const resourceSchema = new mongoose.Schema(
       required: true,
       validate: {
         validator: function (v) {
-          return /^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+$/.test(v);
+          return /^(https?\:\/\/).+$/.test(v);
         },
-        message: (props) => `${props.value} is not a valid YouTube URL!`,
+        message: (props) => `${props.value} is not a valid URL!`,
       },
     },
     thumbnailUrl: {
