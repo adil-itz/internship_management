@@ -78,10 +78,16 @@ export default function AdminCourses({ darkMode, setDarkMode, user }) {
 
   const filteredList = courses.filter((item) => {
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchTitle = item.title?.toLowerCase().includes(q);
+      const matchDescription = item.description?.toLowerCase().includes(q);
+      const matchDomain = item.domain?.toLowerCase().includes(q);
       const matchCreator = item.createdBy?.name?.toLowerCase().includes(q);
-      if (!matchTitle && !matchCreator) return false;
+      const matchSkills = item.skills?.some((s) => s.toLowerCase().includes(q));
+      const matchModules = item.modules?.some(
+        (m) => m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q)
+      );
+      if (!matchTitle && !matchDescription && !matchDomain && !matchCreator && !matchSkills && !matchModules) return false;
     }
     return true;
   });

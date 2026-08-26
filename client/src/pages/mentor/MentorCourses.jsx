@@ -75,10 +75,15 @@ export default function MentorCourses({ darkMode, setDarkMode, user }) {
   const filteredCourses = courses.filter((item) => {
     if (statusFilter !== 'all' && item.status !== statusFilter) return false;
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchTitle = item.title?.toLowerCase().includes(q);
+      const matchDescription = item.description?.toLowerCase().includes(q);
       const matchDomain = item.domain?.toLowerCase().includes(q);
-      if (!matchTitle && !matchDomain) return false;
+      const matchSkills = item.skills?.some((s) => s.toLowerCase().includes(q));
+      const matchModules = item.modules?.some(
+        (m) => m.title?.toLowerCase().includes(q) || m.description?.toLowerCase().includes(q)
+      );
+      if (!matchTitle && !matchDescription && !matchDomain && !matchSkills && !matchModules) return false;
     }
     return true;
   });

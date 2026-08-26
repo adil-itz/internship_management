@@ -80,10 +80,14 @@ export default function AdminResources({ darkMode, setDarkMode, user }) {
 
   const filteredList = resources.filter((item) => {
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchTitle = item.title?.toLowerCase().includes(q);
+      const matchDescription = item.description?.toLowerCase().includes(q);
+      const matchCategory = item.category?.toLowerCase().includes(q);
       const matchCreator = item.createdBy?.name?.toLowerCase().includes(q);
-      if (!matchTitle && !matchCreator) return false;
+      const matchSkills = item.skills?.some((s) => s.toLowerCase().includes(q));
+      const matchTags = item.tags?.some((t) => t.toLowerCase().includes(q));
+      if (!matchTitle && !matchDescription && !matchCategory && !matchCreator && !matchSkills && !matchTags) return false;
     }
     return true;
   });

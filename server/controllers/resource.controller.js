@@ -76,7 +76,14 @@ export const getResources = async (req, res) => {
     }
 
     if (req.query.search) {
-      query.$text = { $search: req.query.search };
+      const searchRegex = new RegExp(req.query.search.trim(), "i");
+      query.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { category: searchRegex },
+        { skills: searchRegex },
+        { tags: searchRegex },
+      ];
     }
 
     let sortObj = { createdAt: -1 };
@@ -84,16 +91,9 @@ export const getResources = async (req, res) => {
     else if (req.query.sort === "title") sortObj = { title: 1 };
     else if (req.query.sort === "newest") sortObj = { createdAt: -1 };
 
-    if (req.query.search && !req.query.sort) {
-      sortObj = { score: { $meta: "textScore" } };
-    }
-
     const total = await Resource.countDocuments(query);
     
     let resourcesQuery = Resource.find(query);
-    if (req.query.search && !req.query.sort) {
-       resourcesQuery = resourcesQuery.select({ score: { $meta: "textScore" } });
-    }
     
     const resources = await resourcesQuery
       .sort(sortObj)

@@ -75,10 +75,13 @@ export default function MentorResources({ darkMode, setDarkMode, user }) {
   const filteredResources = resources.filter((item) => {
     if (statusFilter !== 'all' && item.status !== statusFilter) return false;
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase().trim();
       const matchTitle = item.title?.toLowerCase().includes(q);
+      const matchDescription = item.description?.toLowerCase().includes(q);
       const matchCategory = item.category?.toLowerCase().includes(q);
-      if (!matchTitle && !matchCategory) return false;
+      const matchSkills = item.skills?.some((s) => s.toLowerCase().includes(q));
+      const matchTags = item.tags?.some((t) => t.toLowerCase().includes(q));
+      if (!matchTitle && !matchDescription && !matchCategory && !matchSkills && !matchTags) return false;
     }
     return true;
   });
