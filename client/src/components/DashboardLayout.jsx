@@ -51,7 +51,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
   const pathFirst = location.pathname.split('/')[1];
   const pathSecond = location.pathname.split('/')[2];
   const role =
-    pathFirst === 'company' || pathSecond === 'company'
+    activeUser?.role ||
+    (pathFirst === 'company' || pathSecond === 'company'
       ? 'company'
       : pathFirst === 'student' || pathSecond === 'student'
       ? 'student'
@@ -59,7 +60,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       ? 'mentor'
       : pathFirst === 'admin' || pathSecond === 'admin'
       ? 'admin'
-      : activeUser?.role || 'student';
+      : 'student');
 
   const roleConfigs = {
     student: {
@@ -68,9 +69,11 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       icon: GraduationCap,
       color: 'blue',
       navItems: [
-        { id: 'applications', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/student' },
+        { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/student' },
         { id: 'profile', label: 'My Profile', icon: UserCheck, path: '/dashboard/student/profile' },
         { id: 'internships', label: 'Explore Internships', icon: Briefcase, path: '/student/internships' },
+        { id: 'my-applications', label: 'My Applications', icon: FileCheck, path: '/student/applications' },
+        { id: 'my-mentor', label: 'My Mentor', icon: UserCheck, path: '/student/mentor' },
         {
           id: 'learning-hub',
           label: 'Learning Hub',
@@ -91,6 +94,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'postings', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/company' },
         { id: 'manage-internships', label: 'Manage Internships', icon: Briefcase, path: '/company/internships' },
         { id: 'create-internship', label: '+ Post Internship', icon: Sparkles, path: '/company/internships/create' },
+        { id: 'company-applications', label: 'Applications', icon: Users, path: '/company/applications' },
+        { id: 'company-mentor-assignments', label: 'Mentor Assignments', icon: UserCheck, path: '/company/mentor-assignments' },
       ],
     },
     mentor: {
@@ -100,8 +105,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       color: 'blue',
       navItems: [
         { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/mentor' },
-        { id: 'sessions', label: '1-on-1 Sessions', icon: Video, badge: '2', path: '/dashboard/mentor' },
-        { id: 'mentees', label: 'Assigned Mentees', icon: Users, badge: '8', path: '/dashboard/mentor' },
+        { id: 'assigned-interns', label: 'Assigned Interns', icon: Users, path: '/mentor/interns' },
         {
           id: 'learning-hub',
           label: 'Learning Hub',
@@ -120,8 +124,9 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       color: 'blue',
       navItems: [
         { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/admin' },
-        { id: 'users', label: 'User Directory', icon: Users, badge: '12.4k', path: '/dashboard/admin' },
-        { id: 'internships', label: 'Manage Internships', icon: Briefcase, path: '/dashboard/admin' },
+        { id: 'manage-internships', label: 'Manage All Internships', icon: Briefcase, path: '/admin/internships' },
+        { id: 'admin-applications', label: 'Applications', icon: FileCheck, path: '/admin/applications' },
+        { id: 'admin-mentor-assignments', label: 'Mentor Assignments', icon: UserCheck, path: '/admin/mentor-assignments' },
         {
           id: 'learning-hub',
           label: 'Learning Hub',

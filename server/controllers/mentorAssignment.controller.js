@@ -3,7 +3,6 @@ import Application from "../models/Application.js";
 import Internship from "../models/Internship.js";
 import User from "../models/User.js";
 
-// assignMentor
 export const assignMentor = async (req, res) => {
   try {
     const { internshipId, studentId, mentorId } = req.body;
@@ -17,7 +16,7 @@ export const assignMentor = async (req, res) => {
     }
 
     const student = await User.findById(studentId);
-    if (!student || student.role !== "student") return res.status(404).json({ success: false, message: "Student not found" });
+    if (!student) return res.status(404).json({ success: false, message: "Student not found" });
 
     const mentor = await User.findById(mentorId);
     if (!mentor || mentor.role !== "mentor") return res.status(404).json({ success: false, message: "Mentor not found" });
@@ -47,7 +46,6 @@ export const assignMentor = async (req, res) => {
   }
 };
 
-// getAssignments (for admin)
 export const getAssignments = async (req, res) => {
   try {
     const assignments = await MentorAssignment.find()
@@ -60,7 +58,6 @@ export const getAssignments = async (req, res) => {
   }
 };
 
-// getMyAssignments (for mentor)
 export const getMyAssignments = async (req, res) => {
   try {
     const assignments = await MentorAssignment.find({ mentor: req.user.id })
@@ -73,20 +70,18 @@ export const getMyAssignments = async (req, res) => {
   }
 };
 
-// getStudentAssignments (for student)
 export const getStudentAssignments = async (req, res) => {
-    try {
-      const assignments = await MentorAssignment.find({ student: req.user.id })
-        .populate("mentor", "name email")
-        .populate("internship", "title company");
-        
-      res.json({ success: true, assignments });
-    } catch (error) {
-      res.status(500).json({ success: false, message: "Server error" });
-    }
-  };
+  try {
+    const assignments = await MentorAssignment.find({ student: req.user.id })
+      .populate("mentor", "name email")
+      .populate("internship", "title company");
+      
+    res.json({ success: true, assignments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
-// getInternshipAssignments (for company)
 export const getInternshipAssignments = async (req, res) => {
   try {
     const internship = await Internship.findById(req.params.internshipId);
@@ -107,7 +102,6 @@ export const getInternshipAssignments = async (req, res) => {
   }
 };
 
-// getAssignmentById
 export const getAssignmentById = async (req, res) => {
   try {
     const assignment = await MentorAssignment.findById(req.params.id)
@@ -122,7 +116,6 @@ export const getAssignmentById = async (req, res) => {
   }
 };
 
-// updateAssignmentStatus
 export const updateAssignmentStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -144,6 +137,15 @@ export const updateAssignmentStatus = async (req, res) => {
     await assignment.save();
 
     res.json({ success: true, message: "Assignment status updated", assignment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getMentors = async (req, res) => {
+  try {
+    const mentors = await User.find({ role: "mentor" }).select("name email avatar");
+    res.json({ success: true, mentors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
