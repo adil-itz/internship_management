@@ -41,12 +41,17 @@ app.use(passport.session());
 // Connect to Database
 connectDB();
 
+import applicationRoutes from "./server/routes/application.routes.js";
+import mentorAssignmentRoutes from "./server/routes/mentorAssignment.routes.js";
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/internships", internshipRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/mentor-assignments", mentorAssignmentRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));

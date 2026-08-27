@@ -8,6 +8,7 @@ import {
   updateInternship,
   deleteInternship,
 } from "../controllers/internship.controller.js";
+import { getInternshipApplications } from "../controllers/application.controller.js";
 import { protect, authorizeRoles } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
@@ -20,5 +21,7 @@ router.get("/:id", protect, getInternshipById);
 router.put("/:id", protect, authorizeRoles("company", "admin"), updateInternship);
 router.delete("/:id", protect, authorizeRoles("company", "admin"), deleteInternship);
 
-export default router;
+// Added application list route
+router.get("/:internshipId/applications", protect, authorizeRoles("company", "admin"), getInternshipApplications);
 
+export default router;
