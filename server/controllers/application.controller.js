@@ -1,7 +1,6 @@
 import Application from "../models/Application.js";
 import Internship from "../models/Internship.js";
 
-// createApplication
 export const createApplication = async (req, res) => {
   try {
     const { internshipId, resumeUrl, coverLetter } = req.body;
@@ -48,7 +47,6 @@ export const createApplication = async (req, res) => {
   }
 };
 
-// getStudentApplications
 export const getStudentApplications = async (req, res) => {
   try {
     const applications = await Application.find({ candidate: req.user.id })
@@ -64,7 +62,6 @@ export const getStudentApplications = async (req, res) => {
   }
 };
 
-// getApplicationById
 export const getApplicationById = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
@@ -75,17 +72,12 @@ export const getApplicationById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    // Access control
     const isStudent = req.user.role === "student" && application.candidate._id.toString() === req.user.id;
     const isCompany = req.user.role === "company" && application.internship.company.toString() === req.user.id;
     const isAdmin = req.user.role === "admin";
-    // For mentor, we'll need to check MentorAssignment but the requirement says "Can view applications related to their assigned internships/students."
-    // Let's allow mentor if they have an active assignment, but for now we'll allow access if we don't strictly block it, or we block it here.
     
-    // For now:
     if (!isStudent && !isCompany && !isAdmin) {
-        // Allow mentor logic can be added, but skipping for simplicity or check DB
-        return res.status(403).json({ success: false, message: "Not authorized to view this application" });
+      return res.status(403).json({ success: false, message: "Not authorized to view this application" });
     }
 
     res.json({
@@ -97,7 +89,6 @@ export const getApplicationById = async (req, res) => {
   }
 };
 
-// getInternshipApplications
 export const getInternshipApplications = async (req, res) => {
   try {
     const { internshipId } = req.params;
@@ -142,7 +133,37 @@ export const getInternshipApplications = async (req, res) => {
   }
 };
 
-// updateApplicationStatus
+export const getAllApplicationsAdmin = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 10 } = req.query;
+    const query = {};
+    if (status) query.status = status;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const applications = await Application.find(query)
+      .populate("candidate", "name email avatar")
+      .populate("internship", "title company location duration")
+      .skip(skip)
+      .limit(parseInt(limit))
+      .sort({ appliedAt: -1 });
+
+    const total = await Application.countDocuments(query);
+
+    res.json({
+      success: true,
+      applications,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { status, rejectionReason } = req.body;
@@ -163,8 +184,8 @@ export const updateApplicationStatus = async (req, res) => {
 
     const currentStatus = application.status;
     const validTransitions = {
-      applied: ["shortlisted", "rejected"],
-      shortlisted: ["interview_scheduled", "rejected"],
+      applied: ["shortlisted", "interview_scheduled", "selected", "rejected"],
+      shortlisted: ["interview_scheduled", "selected", "rejected"],
       interview_scheduled: ["selected", "rejected"],
       selected: [],
       rejected: [],
@@ -192,7 +213,6 @@ export const updateApplicationStatus = async (req, res) => {
   }
 };
 
-// scheduleInterview
 export const scheduleInterview = async (req, res) => {
   try {
     const { date, time, mode, meetingLink, location, notes } = req.body;
@@ -230,7 +250,6 @@ export const scheduleInterview = async (req, res) => {
   }
 };
 
-// updateInterview
 export const updateInterview = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id).populate("internship");
@@ -243,7 +262,7 @@ export const updateInterview = async (req, res) => {
     }
 
     if (!application.interview) {
-        return res.status(400).json({ success: false, message: "No interview found" });
+      return res.status(400).json({ success: false, message: "No interview found" });
     }
 
     const { date, time, mode, meetingLink, location, notes, status } = req.body;
@@ -264,7 +283,6 @@ export const updateInterview = async (req, res) => {
   }
 };
 
-// withdrawApplication
 export const withdrawApplication = async (req, res) => {
   try {
     const application = await Application.findById(req.params.id);

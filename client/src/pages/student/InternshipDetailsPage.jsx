@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
-import ApplyComingSoonModal from '../../components/internship/ApplyComingSoonModal';
+import ApplicationFormModal from '../../components/applications/ApplicationFormModal';
 import { getInternshipById } from '../../services/internship.service';
+import { getMyApplications } from '../../services/application.service';
 import {
   ArrowLeft,
   Building2,
@@ -19,6 +20,8 @@ import {
   Users,
   Send,
   BookOpen,
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 
 export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
@@ -28,35 +31,64 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
   const [internship, setInternship] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [comingSoonModalOpen, setComingSoonModalOpen] = useState(false);
+
+  const [existingApp, setExistingApp] = useState(null);
+  const [applyModalOpen, setApplyModalOpen] = useState(false);
+
+  const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
+  let activeUser = user;
+  if (!activeUser && sessionUserStr && sessionUserStr !== 'undefined' && sessionUserStr !== 'null') {
+    try {
+      activeUser = JSON.parse(sessionUserStr);
+    } catch (e) {}
+  }
+
+  const role = activeUser?.role || 'student';
 
   useEffect(() => {
-    const fetchDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getInternshipById(id);
-        if (res && res.success) {
-          setInternship(res.internship);
-        } else {
-          setError('Internship not found');
-        }
-      } catch (err) {
-        console.error('Error fetching internship details:', err);
-        setError(err.message || 'Failed to load internship details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (id) {
       fetchDetails();
+      if (role === 'student') {
+        checkStudentApplication();
+      }
     }
-  }, [id]);
+  }, [id, role]);
+
+  const fetchDetails = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getInternshipById(id);
+      if (res && res.success) {
+        setInternship(res.internship);
+      } else {
+        setError('Internship not found');
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Failed to load internship details');
+    } fontally: {
+      setLoading(false);
+    }
+  };
+
+  const checkStudentApplication = async () => {
+    try {
+      const res = await getMyApplications();
+      if (res && res.success && res.applications) {
+        const found = res.applications.find(
+          (a) => (a.internship?._id === id || a.internship === id) && a.status !== 'withdrawn'
+        );
+        if (found) setExistingApp(found);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (loading) {
     return (
-      <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode}>
+      <DashboardLayout user={activeUser} darkMode={darkMode} setDarkMode={setDarkMode}>
         <div className="p-12 text-center space-y-4">
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="text-xs font-bold text-slate-400">Loading internship details...</p>
@@ -67,7 +99,7 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
   if (error || !internship) {
     return (
-      <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode}>
+      <DashboardLayout user={activeUser} darkMode={darkMode} setDarkMode={setDarkMode}>
         <div className="space-y-4">
           <button
             onClick={() => navigate(-1)}
@@ -114,6 +146,7 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
   const companyName = typeof company === 'object' && company !== null ? company.name : 'Company';
   const companyEmail = typeof company === 'object' && company !== null ? company.email : '';
+  const isCompanyOwner = role === 'company' && typeof company === 'object' && company !== null && (company._id === activeUser?.id || company.toString() === activeUser?.id);
 
   const formattedDeadline = applicationDeadline
     ? new Date(applicationDeadline).toLocaleDateString('en-GB', {
@@ -135,19 +168,66 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
     ? `₹${stipend.toLocaleString('en-IN')}${stipendType ? ` / ${stipendType}` : ' / Month'}`
     : 'Unpaid';
 
+  const isClosed = internship.status !== 'published' || (applicationDeadline && new Date() > new Date(applicationDeadline));
+
+  const renderActionButton = () => {
+    if (isCompanyOwner) {
+      return (
+        <button
+          onClick={() => navigate(`/company/internships/${id}/applications`)}
+          className="px-6 py-3 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg cursor-pointer transition-all flex items-center justify-center gap-2 shrink-0"
+        >
+          <Users size={15} />
+          <span>View Applicants</span>
+        </button>
+      );
+    }
+
+    if (existingApp) {
+      return (
+        <button
+          onClick={() => navigate(`/student/applications/${existingApp._id}`)}
+          className="px-6 py-3 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl shadow-sm hover:bg-emerald-100 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        >
+          <CheckCircle2 size={15} />
+          <span>View Application ({existingApp.status})</span>
+        </button>
+      );
+    }
+
+    if (isClosed) {
+      return (
+        <button
+          disabled
+          className="px-6 py-3 text-xs font-extrabold text-slate-400 bg-slate-100 dark:bg-slate-800 rounded-2xl shrink-0 cursor-not-allowed"
+        >
+          Applications Closed
+        </button>
+      );
+    }
+
+    return (
+      <button
+        onClick={() => setApplyModalOpen(true)}
+        className="px-6 py-3 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg cursor-pointer transition-all flex items-center justify-center gap-2 shrink-0 group hover:scale-105"
+      >
+        <Send size={15} />
+        <span>Apply Now</span>
+      </button>
+    );
+  };
+
   return (
-    <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode}>
+    <DashboardLayout user={activeUser} darkMode={darkMode} setDarkMode={setDarkMode}>
       <div className="space-y-6 max-w-5xl mx-auto">
         
-        {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
         >
-          <ArrowLeft size={16} /> Back to Internships
+          <ArrowLeft size={16} /> Back
         </button>
 
-        {/* Header Hero Card */}
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             
@@ -170,16 +250,9 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             </div>
 
-            <button
-              onClick={() => setComingSoonModalOpen(true)}
-              className="px-6 py-3 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-2xl shadow-lg cursor-pointer transition-all flex items-center justify-center gap-2 shrink-0 group hover:scale-105"
-            >
-              <Send size={15} />
-              <span>Apply Now</span>
-            </button>
+            {renderActionButton()}
           </div>
 
-          {/* Core Info Highlights */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
@@ -219,13 +292,9 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
           </div>
         </div>
 
-        {/* Content Body Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          {/* Main Info (Left 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* About Section */}
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
               <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <BookOpen size={16} className="text-blue-500" />
@@ -236,7 +305,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </p>
             </div>
 
-            {/* Skills Required */}
             {skills && skills.length > 0 && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -256,7 +324,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             )}
 
-            {/* Responsibilities */}
             {responsibilities && responsibilities.length > 0 && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -274,7 +341,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             )}
 
-            {/* Requirements */}
             {requirements && requirements.length > 0 && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -294,10 +360,8 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
           </div>
 
-          {/* Sidebar Info (Right 1 col) */}
           <div className="space-y-6">
             
-            {/* Eligibility Card */}
             {eligibility && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-4">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -345,7 +409,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             )}
 
-            {/* Benefits Card */}
             {benefits && benefits.length > 0 && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -363,7 +426,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             )}
 
-            {/* Dates & Action Box */}
             <div className="p-6 rounded-3xl bg-slate-900 text-white space-y-4 shadow-xl">
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2">
@@ -381,13 +443,15 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
                 </div>
               </div>
 
-              <button
-                onClick={() => setComingSoonModalOpen(true)}
-                className="w-full py-3 text-xs font-extrabold text-slate-900 bg-white hover:bg-slate-100 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <Send size={15} className="text-blue-600" />
-                <span>Apply Now</span>
-              </button>
+              {!isCompanyOwner && !existingApp && !isClosed && (
+                <button
+                  onClick={() => setApplyModalOpen(true)}
+                  className="w-full py-3 text-xs font-extrabold text-slate-900 bg-white hover:bg-slate-100 rounded-2xl shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <Send size={15} className="text-blue-600" />
+                  <span>Apply Now</span>
+                </button>
+              )}
             </div>
 
           </div>
@@ -396,11 +460,15 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
       </div>
 
-      {/* Apply Coming Soon Notice Modal */}
-      <ApplyComingSoonModal
-        isOpen={comingSoonModalOpen}
-        onClose={() => setComingSoonModalOpen(false)}
+      <ApplicationFormModal
+        isOpen={applyModalOpen}
+        onClose={() => setApplyModalOpen(false)}
+        internshipId={id}
         internshipTitle={title}
+        companyName={companyName}
+        onSuccess={() => {
+          checkStudentApplication();
+        }}
       />
     </DashboardLayout>
   );

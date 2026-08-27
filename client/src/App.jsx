@@ -10,15 +10,20 @@ import ProtectedRoute from './components/ProtectedRoute';
 import StudentProfile from './pages/StudentProfile';
 import StudentInternships from './pages/student/StudentInternships';
 import InternshipDetailsPage from './pages/student/InternshipDetailsPage';
+import StudentApplications from './pages/student/StudentApplications';
+import StudentApplicationDetails from './pages/student/StudentApplicationDetails';
+import StudentMentorAssignment from './pages/student/StudentMentorAssignment';
+
 import CompanyInternships from './pages/company/CompanyInternships';
 import CreateInternship from './pages/company/CreateInternship';
 import EditInternship from './pages/company/EditInternship';
+import CompanyInternshipApplications from './pages/company/CompanyInternshipApplications';
+import CompanyAllApplications from './pages/company/CompanyAllApplications';
+import CompanyApplicationDetails from './pages/company/CompanyApplicationDetails';
+import CompanyMentorAssignments from './pages/company/CompanyMentorAssignments';
 
-import ResourceExploration from './pages/student/ResourceExploration';
-import ResourceDetails from './pages/student/ResourceDetails';
-import CourseExploration from './pages/student/CourseExploration';
-import CourseDetails from './pages/student/CourseDetails';
-
+import AssignedInterns from './pages/mentor/AssignedInterns';
+import InternDetails from './pages/mentor/InternDetails';
 import MentorResources from './pages/mentor/MentorResources';
 import CreateResourcePage from './pages/mentor/CreateResourcePage';
 import EditResourcePage from './pages/mentor/EditResourcePage';
@@ -26,12 +31,20 @@ import MentorCourses from './pages/mentor/MentorCourses';
 import CreateCoursePage from './pages/mentor/CreateCoursePage';
 import EditCoursePage from './pages/mentor/EditCoursePage';
 
+import AdminInternships from './pages/admin/AdminInternships';
+import AdminApplications from './pages/admin/AdminApplications';
+import AdminMentorAssignments from './pages/admin/AdminMentorAssignments';
 import AdminResources from './pages/admin/AdminResources';
 import AdminCreateResource from './pages/admin/AdminCreateResource';
 import AdminEditResource from './pages/admin/AdminEditResource';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminCreateCourse from './pages/admin/AdminCreateCourse';
 import AdminEditCourse from './pages/admin/AdminEditCourse';
+
+import ResourceExploration from './pages/student/ResourceExploration';
+import ResourceDetails from './pages/student/ResourceDetails';
+import CourseExploration from './pages/student/CourseExploration';
+import CourseDetails from './pages/student/CourseDetails';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -59,7 +72,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
         
-        {/* Dynamic Role Dashboard Routing */}
         <Route
           path="/dashboard"
           element={
@@ -86,11 +98,10 @@ function App() {
           }
         />
 
-        {/* Student Internship Routes */}
         <Route
           path="/student/internships"
           element={
-            <ProtectedRoute allowedRoles={['student']}>
+            <ProtectedRoute allowedRoles={['student', 'admin']}>
               <StudentInternships darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
@@ -103,8 +114,31 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/student/applications"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentApplications darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/applications/:id"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentApplicationDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/mentor"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentMentorAssignment darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Student Learning Hub Routes */}
         <Route
           path="/student/resources"
           element={
@@ -138,7 +172,6 @@ function App() {
           }
         />
 
-        {/* Company Internship Routes */}
         <Route
           path="/company/internships"
           element={
@@ -158,13 +191,60 @@ function App() {
         <Route
           path="/company/internships/:id/edit"
           element={
-            <ProtectedRoute allowedRoles={['company']}>
+            <ProtectedRoute allowedRoles={['company', 'admin']}>
               <EditInternship darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/company/internships/:internshipId/applications"
+          element={
+            <ProtectedRoute allowedRoles={['company', 'admin']}>
+              <CompanyInternshipApplications darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/applications"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyAllApplications darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/applications/:id"
+          element={
+            <ProtectedRoute allowedRoles={['company', 'admin']}>
+              <CompanyApplicationDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/mentor-assignments"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyMentorAssignments darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Mentor Learning Hub Routes */}
+        <Route
+          path="/mentor/interns"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <AssignedInterns darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/interns/:id"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <InternDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/mentor/resources"
           element={
@@ -214,7 +294,38 @@ function App() {
           }
         />
 
-        {/* Admin Learning Hub Routes */}
+        <Route
+          path="/admin/internships"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminInternships darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/applications"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminApplications darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/applications/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <CompanyApplicationDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/mentor-assignments"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminMentorAssignments darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/resources"
           element={

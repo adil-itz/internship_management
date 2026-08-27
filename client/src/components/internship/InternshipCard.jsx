@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin, Briefcase, Calendar, Clock, DollarSign } from 'lucide-react';
 
-export default function InternshipCard({ internship, onViewDetails, onApplyNow, isCompanyView, onEdit, onDelete }) {
+export default function InternshipCard({ internship, onViewDetails, onApplyNow, isCompanyView, hideApplicantsButton, onEdit, onDelete }) {
   if (!internship) return null;
 
   const {
@@ -108,22 +108,30 @@ export default function InternshipCard({ internship, onViewDetails, onApplyNow, 
         </div>
 
         {isCompanyView ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            {!hideApplicantsButton && (
+              <Link
+                to={`/company/internships/${_id}/applications`}
+                className="px-3 py-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 rounded-xl transition-all"
+              >
+                Applicants
+              </Link>
+            )}
             <Link
               to={`/student/internships/${_id}`}
-              className="px-3 py-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all"
+              className="px-2.5 py-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-all"
             >
               View
             </Link>
             <button
               onClick={() => onEdit && onEdit(_id)}
-              className="px-3 py-1.5 text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 rounded-xl transition-all cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
             >
               Edit
             </button>
             <button
               onClick={() => onDelete && onDelete(_id, title)}
-              className="px-3 py-1.5 text-xs font-extrabold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-extrabold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
             >
               Delete
             </button>
