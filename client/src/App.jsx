@@ -13,6 +13,8 @@ import InternshipDetailsPage from './pages/student/InternshipDetailsPage';
 import StudentApplications from './pages/student/StudentApplications';
 import StudentApplicationDetails from './pages/student/StudentApplicationDetails';
 import StudentMentorAssignment from './pages/student/StudentMentorAssignment';
+import StudentTasks from './pages/student/StudentTasks';
+import StudentTaskDetails from './pages/student/StudentTaskDetails';
 
 import CompanyInternships from './pages/company/CompanyInternships';
 import CreateInternship from './pages/company/CreateInternship';
@@ -34,6 +36,7 @@ import EditCoursePage from './pages/mentor/EditCoursePage';
 import AdminInternships from './pages/admin/AdminInternships';
 import AdminApplications from './pages/admin/AdminApplications';
 import AdminMentorAssignments from './pages/admin/AdminMentorAssignments';
+import AdminTasks from './pages/admin/AdminTasks';
 import AdminResources from './pages/admin/AdminResources';
 import AdminCreateResource from './pages/admin/AdminCreateResource';
 import AdminEditResource from './pages/admin/AdminEditResource';
@@ -135,6 +138,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <StudentMentorAssignment darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/tasks"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentTasks darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/tasks/:taskId"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentTaskDetails darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
@@ -323,6 +342,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminMentorAssignments darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/tasks"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminTasks darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
