@@ -44,6 +44,7 @@ connectDB();
 import applicationRoutes from "./server/routes/application.routes.js";
 import mentorAssignmentRoutes from "./server/routes/mentorAssignment.routes.js";
 import internshipTaskRoutes from "./server/routes/internshipTask.routes.js";
+import chatRoutes from "./server/routes/chat.routes.js";
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -54,6 +55,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/mentor-assignments", mentorAssignmentRoutes);
 app.use("/api/internship-tasks", internshipTaskRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));
@@ -72,8 +74,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+import http from "http";
+import { initSocket } from "./server/socket/chat.socket.js";
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+initSocket(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
