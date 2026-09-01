@@ -16,7 +16,10 @@ import {
   MessageSquare,
   AlertCircle,
   Check,
-  Clock
+  Clock,
+  CheckCircle2,
+  PlayCircle,
+  FileCheck
 } from 'lucide-react';
 
 export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
@@ -117,9 +120,25 @@ export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
   const companyName = task.internship?.company || 'Company';
   const isLocked = task.status === 'completed' || task.status === 'cancelled';
 
+  const steps = [
+    { key: 'assigned', label: 'Assigned', icon: Clock },
+    { key: 'in_progress', label: 'In Progress', icon: PlayCircle },
+    { key: 'submitted', label: 'Submitted', icon: Send },
+    { key: 'completed', label: 'Completed', icon: CheckCircle2 }
+  ];
+
+  const getStepStatus = (stepKey) => {
+    const order = ['assigned', 'in_progress', 'submitted', 'completed'];
+    const currentIndex = order.indexOf(task.status);
+    const stepIndex = order.indexOf(stepKey);
+    if (stepIndex < currentIndex) return 'completed';
+    if (stepIndex === currentIndex) return 'current';
+    return 'upcoming';
+  };
+
   return (
     <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode} activeTab="my-tasks">
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in zoom-in-98 duration-300">
         <button
           onClick={() => navigate('/student/tasks')}
           className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
@@ -134,14 +153,14 @@ export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
           </div>
         )}
 
-        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-6">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <TaskPriorityBadge priority={task.priority} />
                 <TaskStatusBadge status={task.status} />
               </div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                 {task.title}
               </h1>
             </div>
@@ -152,34 +171,59 @@ export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
                 disabled={task.status === 'submitted'}
                 className={`px-6 py-2.5 text-xs font-extrabold rounded-2xl transition-all cursor-pointer flex items-center gap-2 shrink-0 ${
                   task.status === 'submitted'
-                    ? 'bg-purple-100 text-purple-600 cursor-not-allowed opacity-75'
-                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
+                    ? 'bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-300 cursor-not-allowed opacity-75'
+                    : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/20'
                 }`}
               >
                 <Send size={15} />
-                <span>{task.status === 'submitted' ? 'Task Submitted' : 'Submit Task'}</span>
+                <span>{task.status === 'submitted' ? 'Task Submitted' : 'Submit Deliverable'}</span>
               </button>
             )}
           </div>
 
-          <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-            <span className="text-slate-400 font-extrabold uppercase text-[10px]">Description</span>
-            <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap">{task.description}</p>
+          <div className="p-6 rounded-3xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200/60 dark:border-slate-800">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-4">Task Lifecycle Stage</h4>
+            <div className="grid grid-cols-4 gap-2">
+              {steps.map((st) => {
+                const statusType = getStepStatus(st.key);
+                const StepIcon = st.icon;
+                return (
+                  <div
+                    key={st.key}
+                    className={`p-3 rounded-2xl border text-center space-y-1 transition-all ${
+                      statusType === 'completed'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                        : statusType === 'current'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
+                        : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <StepIcon size={16} className="mx-auto" />
+                    <span className="text-[11px] font-extrabold block truncate">{st.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-3">
+            <span className="text-slate-400 font-extrabold uppercase text-[10px] tracking-wider block">Description</span>
+            <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed whitespace-pre-wrap text-sm">{task.description}</p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
             <TaskProgressBar progress={task.progress} size="lg" />
 
             {!isLocked && (
               <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 space-y-3 text-xs">
                 <div className="flex items-center justify-between font-extrabold text-slate-800 dark:text-slate-200">
-                  <span>Update Progress: {progressVal}%</span>
+                  <span>Update Completion Progress: {progressVal}%</span>
                   <button
                     onClick={handleUpdateProgress}
                     disabled={updating}
-                    className="px-4 py-1.5 font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl cursor-pointer shadow-md disabled:opacity-50"
+                    className="px-4 py-1.5 font-extrabold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md rounded-xl cursor-pointer shadow-sm disabled:opacity-50 transition-all"
                   >
-                    {updating ? 'Saving...' : 'Update Progress'}
+                    {updating ? 'Saving...' : 'Save Progress'}
                   </button>
                 </div>
                 <input
@@ -195,36 +239,36 @@ export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-              <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2">
-                <User size={16} className="text-blue-500" /> Mentor Information
+            <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-3">
+              <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
+                <User size={16} className="text-blue-500" /> Assigned Mentor
               </h3>
               <div>
                 <span className="text-slate-400 font-semibold text-[10px] uppercase">Name</span>
-                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5">{mentorName}</p>
+                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5 text-sm">{mentorName}</p>
                 <p className="text-slate-500 text-[11px] font-medium">{mentorEmail}</p>
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-              <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2">
-                <Briefcase size={16} className="text-emerald-500" /> Internship & Deadlines
+            <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 space-y-3">
+              <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
+                <Briefcase size={16} className="text-emerald-500" /> Internship & Target Deadline
               </h3>
               <div>
-                <span className="text-slate-400 font-semibold text-[10px] uppercase">Internship</span>
-                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5">{internshipTitle} ({companyName})</p>
+                <span className="text-slate-400 font-semibold text-[10px] uppercase">Internship Program</span>
+                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5 text-sm">{internshipTitle} ({companyName})</p>
               </div>
               <div>
                 <span className="text-slate-400 font-semibold text-[10px] uppercase">Due Date</span>
-                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5">{formatDate(task.dueDate)}</p>
+                <p className="font-extrabold text-slate-900 dark:text-white mt-0.5 text-sm">{formatDate(task.dueDate)}</p>
               </div>
             </div>
           </div>
 
           {task.submissionUrl && (
-            <div className="p-5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 space-y-3 text-xs">
-              <span className="text-purple-700 dark:text-purple-300 font-extrabold uppercase text-[10px] flex items-center gap-1">
-                <ExternalLink size={14} /> Submission Link & Deliverable
+            <div className="p-6 rounded-3xl bg-purple-50/60 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 space-y-3 text-xs">
+              <span className="text-purple-700 dark:text-purple-300 font-extrabold uppercase text-[10px] flex items-center gap-1.5">
+                <ExternalLink size={14} /> Submission Link & Deliverables
               </span>
               <a
                 href={task.submissionUrl}
@@ -237,18 +281,18 @@ export default function StudentTaskDetails({ darkMode, setDarkMode, user }) {
               </a>
 
               {task.submissionNote && (
-                <div className="pt-2 border-t border-purple-200/60 dark:border-purple-900/60">
-                  <span className="text-purple-600 dark:text-purple-400 font-bold text-[10px] uppercase">Submission Note</span>
-                  <p className="text-slate-800 dark:text-slate-200 font-medium mt-0.5">{task.submissionNote}</p>
+                <div className="pt-3 border-t border-purple-200/60 dark:border-purple-900/60">
+                  <span className="text-purple-600 dark:text-purple-400 font-bold text-[10px] uppercase">Student Submission Note</span>
+                  <p className="text-slate-800 dark:text-slate-200 font-medium mt-1 leading-relaxed">{task.submissionNote}</p>
                 </div>
               )}
             </div>
           )}
 
           {task.mentorFeedback && (
-            <div className="p-5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-2 text-xs">
-              <span className="text-blue-700 dark:text-blue-300 font-extrabold uppercase text-[10px] flex items-center gap-1">
-                <MessageSquare size={14} /> Mentor Feedback
+            <div className="p-6 rounded-3xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 space-y-2 text-xs">
+              <span className="text-amber-700 dark:text-amber-300 font-extrabold uppercase text-[10px] flex items-center gap-1.5">
+                <MessageSquare size={14} /> Mentor Review & Feedback
               </span>
               <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed text-sm">{task.mentorFeedback}</p>
             </div>

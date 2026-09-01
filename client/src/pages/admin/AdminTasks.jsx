@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Briefcase,
-  User
+  User,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
 export default function AdminTasks({ darkMode, setDarkMode, user }) {
@@ -60,17 +62,33 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
 
   return (
     <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode} activeTab="admin-tasks">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldAlert size={24} className="text-blue-500" /> Admin Task Management
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Global monitoring of all internship tasks, assignments, deadlines, and student progress across the platform
-          </p>
+      <div className="space-y-6 animate-in fade-in zoom-in-98 duration-300">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+          <div className="space-y-2 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <ShieldAlert size={14} />
+              <span>Admin Management</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+              Admin Task Control
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Global oversight of all assigned internship tasks, deadlines, progress metrics, and submissions.
+            </p>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-4 bg-white/10 dark:bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 relative z-10">
+            <div className="text-right">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-300 block">Total Monitored</span>
+              <span className="text-2xl font-black text-white">{tasks.length} Tasks</span>
+            </div>
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-300 flex items-center justify-center">
+              <Layers size={20} />
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
           <div className="relative w-full sm:w-80">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -78,7 +96,7 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by task title or description..."
-              className="w-full pl-10 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full pl-10 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
             />
           </div>
 
@@ -87,7 +105,7 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold cursor-pointer"
+              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-extrabold cursor-pointer"
             >
               <option value="all">All Status</option>
               <option value="assigned">Assigned</option>
@@ -101,12 +119,12 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold cursor-pointer"
+              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-extrabold cursor-pointer"
             >
               <option value="all">All Priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
             </select>
           </div>
         </div>
@@ -130,11 +148,11 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
             </p>
           </div>
         ) : (
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-2xs">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                  <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-400">
                     <th className="py-4 px-5">Task & Internship</th>
                     <th className="py-4 px-5">Student</th>
                     <th className="py-4 px-5">Priority</th>
@@ -144,7 +162,7 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                     <th className="py-4 px-5 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
                   {tasks.map((t) => {
                     const studentName = t.student?.name || 'Student';
                     const studentEmail = t.student?.email || '';
@@ -155,14 +173,15 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                       <tr key={t._id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
                         <td className="py-4 px-5 max-w-xs">
                           <div className="font-extrabold text-slate-900 dark:text-white text-sm line-clamp-1">{t.title}</div>
-                          <div className="text-slate-400 text-[11px] font-medium flex items-center gap-1 mt-0.5">
-                            <Briefcase size={12} className="text-blue-500" /> {internshipTitle} ({companyName})
+                          <div className="text-slate-400 text-[11px] font-medium flex items-center gap-1 mt-0.5 truncate">
+                            <Briefcase size={12} className="text-blue-500 shrink-0" />
+                            <span className="truncate">{internshipTitle} ({companyName})</span>
                           </div>
                         </td>
 
                         <td className="py-4 px-5">
-                          <div className="font-bold text-slate-900 dark:text-white">{studentName}</div>
-                          <div className="text-slate-400 text-[11px]">{studentEmail}</div>
+                          <div className="font-extrabold text-slate-900 dark:text-white">{studentName}</div>
+                          <div className="text-slate-400 text-[11px] font-medium">{studentEmail}</div>
                         </td>
 
                         <td className="py-4 px-5">
@@ -177,14 +196,14 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                           <TaskProgressBar progress={t.progress} size="sm" />
                         </td>
 
-                        <td className="py-4 px-5 font-bold text-slate-700 dark:text-slate-300">
+                        <td className="py-4 px-5 font-black text-slate-700 dark:text-slate-300">
                           {formatDate(t.dueDate)}
                         </td>
 
                         <td className="py-4 px-5 text-right">
                           <button
                             onClick={() => setSelectedViewTask(t)}
-                            className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-xl transition-all cursor-pointer"
+                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-xl transition-all cursor-pointer"
                             title="View Full Task Details"
                           >
                             <Eye size={16} />

@@ -17,11 +17,15 @@ import {
   Filter,
   Eye,
   Sliders,
-  ExternalLink,
   AlertCircle,
   Briefcase,
   User,
-  Check
+  Check,
+  Sparkles,
+  TrendingUp,
+  Calendar,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 
 export default function StudentTasks({ darkMode, setDarkMode, user }) {
@@ -136,14 +140,35 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
 
   return (
     <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode} activeTab="my-tasks">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-            <CheckCircle2 size={24} className="text-blue-500" /> My Internship Tasks
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Track assigned tasks, update completion progress, and submit work deliverables to your mentor
-          </p>
+      <div className="space-y-6 animate-in fade-in zoom-in-98 duration-300">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 dark:from-slate-900 dark:via-blue-950 dark:to-slate-900 p-6 sm:p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="space-y-2 relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+              <Sparkles size={14} />
+              <span>Internship Workspace</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+              My Internship Tasks
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Track assigned deliverables, log progress updates, and submit completed tasks to your mentor.
+            </p>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-4 bg-white/10 dark:bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10 relative z-10">
+            <div className="text-right">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-300 block">Overall Completion</span>
+              <span className="text-2xl font-black text-white">{overallProgress}%</span>
+            </div>
+            <div className="w-12 h-12 rounded-full border-4 border-blue-400/30 flex items-center justify-center relative">
+              <div
+                className="w-12 h-12 rounded-full border-4 border-blue-400 absolute inset-0 transition-all duration-700"
+                style={{ clipPath: `polygon(0 0, 100% 0, 100% ${overallProgress}%, 0 ${overallProgress}%)` }}
+              ></div>
+              <TrendingUp size={20} className="text-blue-400" />
+            </div>
+          </div>
         </div>
 
         {notification && (
@@ -153,44 +178,49 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-1 p-6 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-xl space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 group hover:border-blue-500/40 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-blue-100">Overall Progress</span>
-              <span className="text-2xl font-black text-white">{overallProgress}%</span>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Tasks</span>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                <Layers size={16} />
+              </div>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
-              <div
-                className="bg-emerald-400 h-full rounded-full transition-all duration-500"
-                style={{ width: `${overallProgress}%` }}
-              ></div>
-            </div>
-            <p className="text-[11px] text-blue-100 font-medium">
-              Average progress across all your active internship tasks
-            </p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">{summaryStats.totalTasks}</p>
           </div>
 
-          <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Total Tasks</span>
-              <p className="text-2xl font-black text-slate-900 dark:text-white">{summaryStats.totalTasks}</p>
-            </div>
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2">
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 group hover:border-indigo-500/40 transition-all">
+            <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500">In Progress</span>
-              <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{summaryStats.inProgressTasks}</p>
+              <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                <PlayCircle size={16} />
+              </div>
             </div>
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2">
+            <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{summaryStats.inProgressTasks}</p>
+          </div>
+
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 group hover:border-purple-500/40 transition-all">
+            <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-500">Submitted</span>
-              <p className="text-2xl font-black text-purple-600 dark:text-purple-400">{summaryStats.submittedTasks}</p>
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                <Send size={16} />
+              </div>
             </div>
-            <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2">
+            <p className="text-2xl font-black text-purple-600 dark:text-purple-400">{summaryStats.submittedTasks}</p>
+          </div>
+
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 group hover:border-emerald-500/40 transition-all">
+            <div className="flex items-center justify-between">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">Completed</span>
-              <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{summaryStats.completedTasks}</p>
+              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 size={16} />
+              </div>
             </div>
+            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{summaryStats.completedTasks}</p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
           <div className="relative w-full sm:w-80">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
@@ -198,34 +228,36 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by task title or description..."
-              className="w-full pl-10 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+              className="w-full pl-10 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all"
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
-            <Filter size={14} className="text-slate-400 shrink-0" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
-            >
-              <option value="all">All Status</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_progress">In Progress</option>
-              <option value="submitted">Submitted</option>
-              <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
-            </select>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+              {['all', 'assigned', 'in_progress', 'submitted', 'completed'].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer capitalize ${
+                    statusFilter === st
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {st.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
 
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white font-bold"
+              className="p-2 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-white font-extrabold cursor-pointer"
             >
               <option value="all">All Priority</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
             </select>
           </div>
         </div>
@@ -242,12 +274,12 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
           </div>
         ) : filteredTasks.length === 0 ? (
           <div className="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-center space-y-3">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 rounded-3xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
               <CheckCircle2 size={32} />
             </div>
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">No tasks assigned to you yet.</h3>
+            <h3 className="font-extrabold text-base text-slate-900 dark:text-white">No tasks found</h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              When your mentor assigns tasks to you, they will appear here.
+              No tasks match your selected filter criteria.
             </p>
           </div>
         ) : (
@@ -262,7 +294,7 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
               return (
                 <div
                   key={t._id}
-                  className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-5 flex flex-col justify-between group hover:shadow-md transition-all"
+                  className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
                 >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -274,35 +306,36 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
                       <h3 className="font-black text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
                         {t.title}
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mt-1 leading-relaxed">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-2 mt-1.5 leading-relaxed">
                         {t.description}
                       </p>
                     </div>
 
                     <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 space-y-2 text-xs">
                       <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
-                        <span className="flex items-center gap-1 font-bold">
-                          <User size={13} className="text-blue-500" /> Mentor: {mentorName}
+                        <span className="flex items-center gap-1.5 font-extrabold">
+                          <User size={14} className="text-blue-500" /> {mentorName}
                         </span>
-                        <span className="flex items-center gap-1 font-bold text-[11px] text-slate-400">
-                          <Clock size={12} /> Due: {formatDate(t.dueDate)}
+                        <span className="flex items-center gap-1 font-extrabold text-[11px] text-slate-400">
+                          <Clock size={13} /> {formatDate(t.dueDate)}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 font-semibold flex items-center gap-1">
-                        <Briefcase size={12} className="text-emerald-500" /> {internshipTitle} ({companyName})
+                      <div className="text-[11px] text-slate-500 font-semibold flex items-center gap-1 truncate">
+                        <Briefcase size={13} className="text-emerald-500 shrink-0" />
+                        <span className="truncate">{internshipTitle} ({companyName})</span>
                       </div>
                     </div>
 
                     <TaskProgressBar progress={t.progress} />
 
                     {!isLocked && (
-                      <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 space-y-2 text-xs">
+                      <div className="p-3.5 rounded-2xl bg-blue-50/40 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 space-y-2.5 text-xs">
                         <div className="flex items-center justify-between font-extrabold text-slate-700 dark:text-slate-300">
                           <span>Update Progress: {sliderVal}%</span>
                           <button
                             onClick={() => handleSaveProgress(t._id)}
                             disabled={updatingTaskId === t._id}
-                            className="px-3 py-1 text-[11px] font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl cursor-pointer shadow-xs disabled:opacity-50"
+                            className="px-3.5 py-1 text-[11px] font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md hover:shadow-blue-500/20 rounded-xl cursor-pointer shadow-xs disabled:opacity-50 transition-all"
                           >
                             {updatingTaskId === t._id ? 'Saving...' : 'Update'}
                           </button>
@@ -319,20 +352,20 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
                     )}
 
                     {t.mentorFeedback && (
-                      <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs">
-                        <span className="font-extrabold text-amber-700 dark:text-amber-300 text-[10px] uppercase">Mentor Feedback</span>
-                        <p className="text-slate-800 dark:text-slate-200 font-semibold mt-0.5">{t.mentorFeedback}</p>
+                      <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs">
+                        <span className="font-extrabold text-amber-700 dark:text-amber-300 text-[10px] uppercase tracking-wider block">Mentor Feedback</span>
+                        <p className="text-slate-800 dark:text-slate-200 font-medium mt-1 leading-relaxed">{t.mentorFeedback}</p>
                       </div>
                     )}
                   </div>
 
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                  <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                     <button
                       onClick={() => navigate(`/student/tasks/${t._id}`)}
                       className="px-4 py-2 text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 rounded-xl hover:bg-blue-100 transition-all cursor-pointer flex items-center gap-1.5"
                     >
                       <Eye size={14} />
-                      <span>View Details</span>
+                      <span>Details</span>
                     </button>
 
                     {!isLocked && (
@@ -341,8 +374,8 @@ export default function StudentTasks({ darkMode, setDarkMode, user }) {
                         disabled={t.status === 'submitted'}
                         className={`px-4 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
                           t.status === 'submitted'
-                            ? 'bg-purple-100 text-purple-600 cursor-not-allowed opacity-75'
-                            : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
+                            ? 'bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-300 cursor-not-allowed opacity-75'
+                            : 'bg-purple-600 text-white hover:bg-purple-700 shadow-md shadow-purple-600/20'
                         }`}
                       >
                         <Send size={14} />

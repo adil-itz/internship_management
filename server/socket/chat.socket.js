@@ -32,7 +32,7 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    const userId = socket.user.id;
+    const userId = socket.user.id.toString();
     
     // Add user to online map
     if (!userSocketMap.has(userId)) {
@@ -40,7 +40,7 @@ export const initSocket = (server) => {
     }
     userSocketMap.get(userId).add(socket.id);
     
-    // Emit online status globally or just to connected peers if preferred
+    socket.emit("onlineUsersList", { userIds: Array.from(userSocketMap.keys()) });
     io.emit("userOnline", { userId });
 
     socket.on("joinConversation", async ({ conversationId }) => {
