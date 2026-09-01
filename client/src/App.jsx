@@ -15,6 +15,7 @@ import StudentApplicationDetails from './pages/student/StudentApplicationDetails
 import StudentMentorAssignment from './pages/student/StudentMentorAssignment';
 import StudentTasks from './pages/student/StudentTasks';
 import StudentTaskDetails from './pages/student/StudentTaskDetails';
+import ChatPage from './pages/ChatPage';
 
 import CompanyInternships from './pages/company/CompanyInternships';
 import CreateInternship from './pages/company/CreateInternship';
@@ -157,6 +158,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/student/messages"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ChatPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/student/resources"
@@ -261,6 +270,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['mentor']}>
               <InternDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/messages"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <ChatPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute allowedRoles={['student', 'mentor']}>
+              <ChatPage darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />

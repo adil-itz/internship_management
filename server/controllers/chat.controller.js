@@ -49,7 +49,8 @@ export const getConversations = async (req, res) => {
             id: otherUser._id,
             name: otherUser.name,
             email: otherUser.email,
-            avatar: otherUser.avatar
+            avatar: otherUser.avatar,
+            role: otherUser.role
           },
           lastMessage: conv.lastMessage,
           lastMessageAt: conv.lastMessageAt,

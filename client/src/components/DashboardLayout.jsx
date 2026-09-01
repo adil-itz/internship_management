@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Layers,
@@ -31,7 +31,10 @@ import {
   Sliders,
   ExternalLink,
   BookOpen,
+  MessageSquare,
 } from 'lucide-react';
+import { getConversations } from '../services/chat.service';
+import { getSocket } from '../services/socket';
 
 export default function DashboardLayout({ children, user, darkMode, setDarkMode, activeTab, setActiveTab }) {
   const navigate = useNavigate();
@@ -39,6 +42,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showNotificationDrawer, setShowNotificationDrawer] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
   let activeUser = user;
@@ -62,6 +66,35 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       ? 'admin'
       : 'student');
 
+  useEffect(() => {
+    if (!activeUser) return;
+    const fetchUnread = async () => {
+      try {
+        const res = await getConversations();
+        if (res.success && res.conversations) {
+          const total = res.conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+          setUnreadCount(total);
+        }
+      } catch (e) {}
+    };
+
+    fetchUnread();
+
+    const socket = getSocket();
+    if (socket) {
+      const handleNewMessage = () => fetchUnread();
+      const handleMessagesRead = () => fetchUnread();
+      socket.on('newMessage', handleNewMessage);
+      socket.on('newMessageNotification', handleNewMessage);
+      socket.on('messagesRead', handleMessagesRead);
+      return () => {
+        socket.off('newMessage', handleNewMessage);
+        socket.off('newMessageNotification', handleNewMessage);
+        socket.off('messagesRead', handleMessagesRead);
+      };
+    }
+  }, [activeUser, location.pathname]);
+
   const roleConfigs = {
     student: {
       portalTitle: 'Student Portal',
@@ -75,6 +108,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'my-applications', label: 'My Applications', icon: FileCheck, path: '/student/applications' },
         { id: 'my-mentor', label: 'My Mentor', icon: UserCheck, path: '/student/mentor' },
         { id: 'my-tasks', label: 'My Tasks', icon: CheckCircle2, path: '/student/tasks' },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/student/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
           label: 'Learning Hub',
@@ -106,7 +140,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       color: 'blue',
       navItems: [
         { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/mentor' },
-        { id: 'assigned-interns', label: 'Internship Supervision', icon: Users, path: '/mentor/interns' },
+        { id: 'assigned-interns', label: 'Assigned Students', icon: Users, path: '/mentor/interns' },
+        { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/mentor/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
           label: 'Learning Hub',
@@ -158,8 +193,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
     navigate('/login');
   };
 
+  const isMessagesPage = location.pathname.includes('/messages');
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-300">
+    <div className={`bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-300 ${isMessagesPage ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
       
       {/* MOBILE SIDEBAR OVERLAY */}
       {mobileSidebarOpen && (
@@ -369,7 +406,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       </aside>
 
       {/* RIGHT MAIN CONTENT AREA */}
-      <div className={`flex-1 flex flex-col ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'} min-w-0 transition-all duration-300`}>
+      <div className={`flex-1 flex flex-col ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'} min-w-0 transition-all duration-300 ${isMessagesPage ? 'h-full min-h-0 overflow-hidden' : ''}`}>
         
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800/80 h-16 px-4 sm:px-8 flex items-center justify-between gap-4">
@@ -473,18 +510,24 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
           </div>
         </header>
 
-        {/* Main Content View */}
-        <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl w-full mx-auto animate-in fade-in zoom-in-98 duration-300">
-          {children}
-        </main>
+        {isMessagesPage ? (
+          <main className="flex-1 p-2 sm:p-4 max-w-7xl w-full mx-auto overflow-hidden flex flex-col min-h-0">
+            {children}
+          </main>
+        ) : (
+          <>
+            <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl w-full mx-auto animate-in fade-in zoom-in-98 duration-300">
+              {children}
+            </main>
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800 py-4 px-4 sm:px-8 bg-white/50 dark:bg-slate-950/50 mt-auto text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>© {new Date().getFullYear()} InternFlow Platform. All rights reserved.</span>
-          <div className="flex items-center gap-3 text-[11px]">
-            <span>Portal: <strong className="capitalize text-slate-700 dark:text-slate-300 font-bold">{role}</strong></span>
-          </div>
-        </footer>
+            <footer className="border-t border-slate-200 dark:border-slate-800 py-4 px-4 sm:px-8 bg-white/50 dark:bg-slate-950/50 mt-auto text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <span>© {new Date().getFullYear()} InternFlow Platform. All rights reserved.</span>
+              <div className="flex items-center gap-3 text-[11px]">
+                <span>Portal: <strong className="capitalize text-slate-700 dark:text-slate-300 font-bold">{role}</strong></span>
+              </div>
+            </footer>
+          </>
+        )}
 
       </div>
     </div>
