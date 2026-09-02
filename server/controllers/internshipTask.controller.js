@@ -29,7 +29,7 @@ const updateOverdueStatus = async (tasks) => {
 export const createTask = async (req, res) => {
   try {
     const { internshipId, studentId, title, description, priority, dueDate } = req.body;
-    const mentorId = req.user.id;
+    let mentorId = req.body.mentorId || req.user.id;
 
     // Validate required fields
     if (!internshipId || !studentId || !title || !description || !dueDate) {
@@ -48,16 +48,28 @@ export const createTask = async (req, res) => {
       return res.status(403).json({ success: false, message: "Student is not selected for this internship" });
     }
 
-    // Ensure this mentor is assigned to this student for this internship
-    const assignment = await MentorAssignment.findOne({
-      internship: internshipId,
-      student: studentId,
-      mentor: mentorId,
-      status: "active"
-    });
+    if (req.user.role !== "admin") {
+      // Ensure this mentor is assigned to this student for this internship
+      const assignment = await MentorAssignment.findOne({
+        internship: internshipId,
+        student: studentId,
+        mentor: mentorId,
+        status: "active"
+      });
 
-    if (!assignment) {
-      return res.status(403).json({ success: false, message: "You are not assigned as mentor for this intern" });
+      if (!assignment) {
+        return res.status(403).json({ success: false, message: "You are not assigned as mentor for this intern" });
+      }
+    } else if (!req.body.mentorId) {
+      // If admin didn't explicitly pass mentorId, check if student has an active assigned mentor
+      const activeAssignment = await MentorAssignment.findOne({
+        internship: internshipId,
+        student: studentId,
+        status: "active"
+      });
+      if (activeAssignment) {
+        mentorId = activeAssignment.mentor;
+      }
     }
     
     const parsedDueDate = new Date(dueDate);
@@ -84,10 +96,16 @@ export const createTask = async (req, res) => {
 
 export const getMentorTasks = async (req, res) => {
   try {
-    const mentorId = req.user.id;
-    const { status, priority, internshipId, studentId, search, page = 1, limit = 10 } = req.query;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const { status, priority, internshipId, studentId, mentorId, search, page = 1, limit = 10 } = req.query;
 
-    const query = { mentor: mentorId };
+    const query = {};
+    if (userRole === "mentor") {
+      query.mentor = userId;
+    } else if (userRole === "admin" && mentorId) {
+      query.mentor = mentorId;
+    }
     
     if (status) query.status = status;
     if (priority) query.priority = priority;
@@ -105,6 +123,7 @@ export const getMentorTasks = async (req, res) => {
 
     let tasks = await InternshipTask.find(query)
       .populate("student", "name email avatar")
+      .populate("mentor", "name email avatar")
       .populate("internship", "title company")
       .sort({ createdAt: -1 })
       .skip(skip)

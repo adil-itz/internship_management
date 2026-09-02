@@ -10,11 +10,11 @@ import {
 
 const router = express.Router();
 
-router.get("/conversations", protect, authorizeRoles("student", "mentor"), getConversations);
-router.post("/conversations", protect, authorizeRoles("student", "mentor"), createConversation);
+router.get("/conversations", protect, authorizeRoles("student", "mentor", "admin"), getConversations);
+router.post("/conversations", protect, authorizeRoles("student", "mentor", "admin"), createConversation);
 
-router.get("/conversations/:conversationId/messages", protect, authorizeRoles("student", "mentor"), getMessages);
-router.post("/conversations/:conversationId/messages", protect, authorizeRoles("student", "mentor"), sendMessage);
-router.patch("/conversations/:conversationId/read", protect, authorizeRoles("student", "mentor"), markMessagesAsRead);
+router.get("/conversations/:conversationId/messages", protect, authorizeRoles("student", "mentor", "admin"), getMessages);
+router.post("/conversations/:conversationId/messages", protect, authorizeRoles("student", "mentor", "admin"), sendMessage);
+router.patch("/conversations/:conversationId/read", protect, authorizeRoles("student", "mentor", "admin"), markMessagesAsRead);
 
 export default router;

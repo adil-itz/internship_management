@@ -155,6 +155,7 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                   <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200/80 dark:border-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-400">
                     <th className="py-4 px-5">Task & Internship</th>
                     <th className="py-4 px-5">Student</th>
+                    <th className="py-4 px-5">Mentor</th>
                     <th className="py-4 px-5">Priority</th>
                     <th className="py-4 px-5">Status</th>
                     <th className="py-4 px-5">Progress</th>
@@ -166,6 +167,8 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                   {tasks.map((t) => {
                     const studentName = t.student?.name || 'Student';
                     const studentEmail = t.student?.email || '';
+                    const mentorName = t.mentor?.name || 'Admin / Mentor';
+                    const mentorEmail = t.mentor?.email || '';
                     const internshipTitle = t.internship?.title || 'N/A';
                     const companyName = t.internship?.company || 'Company';
 
@@ -182,6 +185,11 @@ export default function AdminTasks({ darkMode, setDarkMode, user }) {
                         <td className="py-4 px-5">
                           <div className="font-extrabold text-slate-900 dark:text-white">{studentName}</div>
                           <div className="text-slate-400 text-[11px] font-medium">{studentEmail}</div>
+                        </td>
+
+                        <td className="py-4 px-5">
+                          <div className="font-extrabold text-slate-900 dark:text-white">{mentorName}</div>
+                          <div className="text-slate-400 text-[11px] font-medium">{mentorEmail}</div>
                         </td>
 
                         <td className="py-4 px-5">
