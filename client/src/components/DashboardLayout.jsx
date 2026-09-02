@@ -164,6 +164,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'admin-applications', label: 'Applications', icon: FileCheck, path: '/admin/applications' },
         { id: 'admin-mentor-assignments', label: 'Mentor Assignments', icon: UserCheck, path: '/admin/mentor-assignments' },
         { id: 'admin-tasks', label: 'Task Management', icon: CheckCircle2, path: '/admin/tasks' },
+        { id: 'messages', label: 'All Chats', icon: MessageSquare, path: '/admin/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
           label: 'Learning Hub',
