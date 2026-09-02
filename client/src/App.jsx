@@ -284,7 +284,7 @@ function App() {
         <Route
           path="/messages"
           element={
-            <ProtectedRoute allowedRoles={['student', 'mentor']}>
+            <ProtectedRoute allowedRoles={['student', 'mentor', 'admin']}>
               <ChatPage darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
@@ -375,6 +375,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminTasks darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <ChatPage darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />

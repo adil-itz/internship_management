@@ -24,6 +24,8 @@ export const getConversations = async (req, res) => {
       query.mentorId = userId;
     } else if (role === "student") {
       query.studentId = userId;
+    } else if (role === "admin") {
+      query = {};
     } else {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
@@ -35,7 +37,25 @@ export const getConversations = async (req, res) => {
     // Format the response and add unread count
     const formattedConversations = await Promise.all(
       conversations.map(async (conv) => {
-        const otherUser = role === "mentor" ? conv.studentId : conv.mentorId;
+        let otherUser;
+        if (role === "mentor") {
+          otherUser = conv.studentId;
+        } else if (role === "student") {
+          otherUser = conv.mentorId;
+        } else {
+          const mentorName = conv.mentorId?.name || "Mentor";
+          const studentName = conv.studentId?.name || "Student";
+          otherUser = {
+            _id: conv.studentId?._id || conv._id,
+            id: conv.studentId?._id || conv._id,
+            name: `${mentorName} & ${studentName}`,
+            email: `Mentor: ${conv.mentorId?.email || 'N/A'} | Student: ${conv.studentId?.email || 'N/A'}`,
+            avatar: conv.studentId?.avatar || conv.mentorId?.avatar,
+            role: "chat",
+            mentor: conv.mentorId,
+            student: conv.studentId
+          };
+        }
         
         const unreadCount = await Message.countDocuments({
           conversationId: conv._id,
@@ -45,13 +65,15 @@ export const getConversations = async (req, res) => {
 
         return {
           conversationId: conv._id,
-          otherUser: {
-            id: otherUser._id,
+          otherUser: otherUser ? {
+            id: otherUser._id || otherUser.id,
             name: otherUser.name,
             email: otherUser.email,
             avatar: otherUser.avatar,
-            role: otherUser.role
-          },
+            role: otherUser.role,
+            mentor: conv.mentorId,
+            student: conv.studentId
+          } : { name: "Conversation", id: conv._id },
           lastMessage: conv.lastMessage,
           lastMessageAt: conv.lastMessageAt,
           unreadCount
@@ -76,7 +98,7 @@ export const getMessages = async (req, res) => {
       return res.status(404).json({ success: false, message: "Conversation not found" });
     }
 
-    if (conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
+    if (req.user.role !== "admin" && conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
       return res.status(403).json({ success: false, message: "Not authorized to view these messages" });
     }
 
@@ -113,13 +135,15 @@ export const createConversation = async (req, res) => {
       return res.status(400).json({ success: false, message: "studentId and mentorId are required" });
     }
 
-    if (userId !== studentId && userId !== mentorId) {
+    if (req.user.role !== "admin" && userId !== studentId && userId !== mentorId) {
       return res.status(403).json({ success: false, message: "Not authorized to create this conversation" });
     }
 
-    const isAssigned = await validateAssignment(mentorId, studentId);
-    if (!isAssigned) {
-      return res.status(403).json({ success: false, message: "Mentor is not assigned to this student" });
+    if (req.user.role !== "admin") {
+      const isAssigned = await validateAssignment(mentorId, studentId);
+      if (!isAssigned) {
+        return res.status(403).json({ success: false, message: "Mentor is not assigned to this student" });
+      }
     }
 
     let conversation = await Conversation.findOne({ mentorId, studentId });
@@ -153,16 +177,20 @@ export const sendMessage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Conversation not found" });
     }
 
-    if (conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
+    if (req.user.role !== "admin" && conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    const isAssigned = await validateAssignment(conversation.mentorId, conversation.studentId);
-    if (!isAssigned) {
-      return res.status(403).json({ success: false, message: "Mentor assignment is no longer active" });
+    if (req.user.role !== "admin") {
+      const isAssigned = await validateAssignment(conversation.mentorId, conversation.studentId);
+      if (!isAssigned) {
+        return res.status(403).json({ success: false, message: "Mentor assignment is no longer active" });
+      }
     }
 
-    const receiverId = conversation.mentorId.toString() === userId ? conversation.studentId : conversation.mentorId;
+    const receiverId = req.user.role === "admin"
+      ? conversation.studentId
+      : (conversation.mentorId.toString() === userId ? conversation.studentId : conversation.mentorId);
 
     const newMessage = new Message({
       conversationId,
@@ -205,7 +233,7 @@ export const markMessagesAsRead = async (req, res) => {
       return res.status(404).json({ success: false, message: "Conversation not found" });
     }
 
-    if (conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
+    if (req.user.role !== "admin" && conversation.mentorId.toString() !== userId && conversation.studentId.toString() !== userId) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 

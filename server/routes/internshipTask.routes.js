@@ -17,7 +17,7 @@ const router = express.Router();
 
 // Specific routes before /:id
 router.get("/my", protect, authorizeRoles("student"), getStudentTasks);
-router.get("/mentor", protect, authorizeRoles("mentor"), getMentorTasks);
+router.get("/mentor", protect, authorizeRoles("mentor", "admin"), getMentorTasks);
 router.get("/intern/:studentId", protect, authorizeRoles("mentor", "admin"), getTasksByIntern);
 
 // General CRUD and specific actions on an ID
