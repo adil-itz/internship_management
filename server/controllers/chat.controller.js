@@ -4,7 +4,6 @@ import MentorAssignment from "../models/MentorAssignment.js";
 import User from "../models/User.js";
 import { getIo, getReceiverSocketId } from "../socket/chat.socket.js";
 
-// Helper to validate assignment
 const validateAssignment = async (mentorId, studentId) => {
   const assignment = await MentorAssignment.findOne({
     mentor: mentorId,
@@ -31,8 +30,6 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find(query).sort({ lastMessageAt: -1 })
       .populate("mentorId", "name email avatar role")
       .populate("studentId", "name email avatar role");
-    
-    // Format the response and add unread count
     const formattedConversations = await Promise.all(
       conversations.map(async (conv) => {
         const otherUser = role === "mentor" ? conv.studentId : conv.mentorId;
@@ -91,7 +88,7 @@ export const getMessages = async (req, res) => {
 
     res.json({
       success: true,
-      messages: messages.reverse(), // Return in chronological order for frontend display
+      messages: messages.reverse(), 
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
