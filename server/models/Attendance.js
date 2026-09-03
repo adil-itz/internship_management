@@ -27,10 +27,10 @@ const attendanceSchema = new mongoose.Schema(
       required: true,
     },
     checkIn: {
-      type: Date,
+      type: String,
     },
     checkOut: {
-      type: Date,
+      type: String,
     },
     remarks: {
       type: String,

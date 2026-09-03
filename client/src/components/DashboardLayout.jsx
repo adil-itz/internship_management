@@ -32,6 +32,8 @@ import {
   ExternalLink,
   BookOpen,
   MessageSquare,
+  Clock,
+  Calendar,
 } from 'lucide-react';
 import { getConversations } from '../services/chat.service';
 import { getSocket } from '../services/socket';
@@ -49,7 +51,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
   if (!activeUser && sessionUserStr && sessionUserStr !== 'undefined' && sessionUserStr !== 'null') {
     try {
       activeUser = JSON.parse(sessionUserStr);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const pathFirst = location.pathname.split('/')[1];
@@ -59,12 +61,12 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
     (pathFirst === 'company' || pathSecond === 'company'
       ? 'company'
       : pathFirst === 'student' || pathSecond === 'student'
-      ? 'student'
-      : pathFirst === 'mentor' || pathSecond === 'mentor'
-      ? 'mentor'
-      : pathFirst === 'admin' || pathSecond === 'admin'
-      ? 'admin'
-      : 'student');
+        ? 'student'
+        : pathFirst === 'mentor' || pathSecond === 'mentor'
+          ? 'mentor'
+          : pathFirst === 'admin' || pathSecond === 'admin'
+            ? 'admin'
+            : 'student');
 
   useEffect(() => {
     if (!activeUser) return;
@@ -75,7 +77,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
           const total = res.conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
           setUnreadCount(total);
         }
-      } catch (e) {}
+      } catch (e) { }
     };
 
     fetchUnread();
@@ -108,6 +110,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'my-applications', label: 'My Applications', icon: FileCheck, path: '/student/applications' },
         { id: 'my-mentor', label: 'My Mentor', icon: UserCheck, path: '/student/mentor' },
         { id: 'my-tasks', label: 'My Tasks', icon: CheckCircle2, path: '/student/tasks' },
+        { id: 'my-attendance', label: 'Attendance', icon: Calendar, path: '/student/attendance' },
+        { id: 'my-worklogs', label: 'Work Logs', icon: Clock, path: '/student/worklogs' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/student/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
@@ -130,6 +134,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'manage-internships', label: 'Manage Internships', icon: Briefcase, path: '/company/internships' },
         { id: 'create-internship', label: '+ Post Internship', icon: Sparkles, path: '/company/internships/create' },
         { id: 'company-applications', label: 'Applications', icon: Users, path: '/company/applications' },
+        { id: 'company-attendance', label: 'Attendance', icon: Calendar, path: '/company/attendance' },
         { id: 'company-mentor-assignments', label: 'Mentor Assignments', icon: UserCheck, path: '/company/mentor-assignments' },
       ],
     },
@@ -141,6 +146,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
       navItems: [
         { id: 'dashboard', label: 'Overview Dashboard', icon: LayoutDashboard, path: '/dashboard/mentor' },
         { id: 'assigned-interns', label: 'Assigned Students', icon: Users, path: '/mentor/interns' },
+        { id: 'mentor-attendance', label: 'Attendance', icon: Calendar, path: '/mentor/attendance' },
+        { id: 'mentor-worklogs', label: 'Work Logs', icon: Clock, path: '/mentor/worklogs' },
         { id: 'messages', label: 'Messages', icon: MessageSquare, path: '/mentor/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
@@ -164,6 +171,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
         { id: 'admin-applications', label: 'Applications', icon: FileCheck, path: '/admin/applications' },
         { id: 'admin-mentor-assignments', label: 'Mentor Assignments', icon: UserCheck, path: '/admin/mentor-assignments' },
         { id: 'admin-tasks', label: 'Task Management', icon: CheckCircle2, path: '/admin/tasks' },
+        { id: 'admin-attendance', label: 'Attendance', icon: Calendar, path: '/admin/attendance' },
+        { id: 'admin-worklogs', label: 'Work Logs', icon: Clock, path: '/admin/worklogs' },
         { id: 'messages', label: 'All Chats', icon: MessageSquare, path: '/admin/messages', badge: unreadCount > 0 ? unreadCount : null },
         {
           id: 'learning-hub',
@@ -198,7 +207,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
   return (
     <div className={`bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-300 ${isMessagesPage ? 'h-screen max-h-screen overflow-hidden' : 'min-h-screen'}`}>
-      
+
       {/* MOBILE SIDEBAR OVERLAY */}
       {mobileSidebarOpen && (
         <div
@@ -209,14 +218,12 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
       {/* LEFT SIDEBAR NAVBAR */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 ${
-          isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
-        } w-72 bg-white dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 transform lg:translate-x-0 ${
-          mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-50 ${isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
+          } w-72 bg-white dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 transform lg:translate-x-0 ${mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-          
+
           {/* Brand Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
@@ -240,23 +247,6 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
             </button>
           </div>
 
-          {/* Role Portal Header Badge */}
-          <div className="p-3">
-            <div className={`w-full flex items-center ${
-              isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5'
-            } rounded-2xl border transition-all ${
-              currentRole.badgeClass
-            } shadow-2xs`}>
-              <div className="flex items-center gap-2.5 min-w-0">
-                <PortalIcon size={18} className="shrink-0" />
-                {!isSidebarCollapsed && (
-                  <span className="font-extrabold text-xs truncate">{currentRole.portalTitle}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Section */}
           <nav className="flex-1 px-3 py-2 space-y-1">
             {!isSidebarCollapsed && (
               <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -284,13 +274,11 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
                             navigate(sub.path);
                             setMobileSidebarOpen(false);
                           }}
-                          className={`w-full flex items-center ${
-                            isSidebarCollapsed ? 'justify-center py-2.5' : 'px-3.5 py-2'
-                          } rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                            isSubSelected
+                          className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center py-2.5' : 'px-3.5 py-2'
+                            } rounded-2xl text-xs font-bold transition-all cursor-pointer ${isSubSelected
                               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 font-black'
                               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
-                          }`}
+                            }`}
                           title={sub.label}
                         >
                           <div className="flex items-center gap-3">
@@ -316,13 +304,11 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
                     }
                     setMobileSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center ${
-                    isSidebarCollapsed ? 'justify-center py-3' : 'justify-between px-3.5 py-2.5'
-                  } rounded-2xl text-xs font-bold transition-all cursor-pointer group relative ${
-                    isSelected
+                  className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center py-3' : 'justify-between px-3.5 py-2.5'
+                    } rounded-2xl text-xs font-bold transition-all cursor-pointer group relative ${isSelected
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 font-black'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                    }`}
                   title={item.label}
                 >
                   <div className="flex items-center gap-3">
@@ -335,11 +321,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
                   {!isSidebarCollapsed && item.badge && (
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                        isSelected
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${isSelected
                           ? 'bg-white/20 text-white'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:bg-blue-50 dark:group-hover:bg-blue-950 group-hover:text-blue-600'
-                      }`}
+                        }`}
                     >
                       {item.badge}
                     </span>
@@ -352,13 +337,12 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
           {/* Bottom Sidebar User Section */}
           <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-950/40">
-            
+
             {/* Theme Toggle Button */}
             <button
               onClick={() => setDarkMode(!darkMode)}
-              className={`w-full flex items-center ${
-                isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
-              } rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer`}
+              className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
+                } rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer`}
               title="Toggle Dark/Light Mode"
             >
               <span className="flex items-center gap-2">
@@ -372,9 +356,8 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
             {/* User Profile Card */}
             <div
-              className={`flex items-center ${
-                isSidebarCollapsed ? 'justify-center p-2' : 'justify-between p-2.5'
-              } rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs`}
+              className={`flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'justify-between p-2.5'
+                } rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-xs">
@@ -408,10 +391,10 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
       {/* RIGHT MAIN CONTENT AREA */}
       <div className={`flex-1 flex flex-col ${isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'} min-w-0 transition-all duration-300 ${isMessagesPage ? 'h-full min-h-0 overflow-hidden' : ''}`}>
-        
+
         {/* Top Header Bar */}
         <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-slate-900/80 border-b border-slate-200/80 dark:border-slate-800/80 h-16 px-4 sm:px-8 flex items-center justify-between gap-4">
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
@@ -434,7 +417,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
                 <span className="text-xs font-semibold text-slate-400 hidden sm:inline">Dashboard</span>
                 <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">/</span>
                 <h2 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
-                  <span>{currentRole.portalTitle}</span>
+                  <span>Workspace Overview</span>
                 </h2>
               </div>
               <p className="text-[11px] text-slate-400 hidden md:block">
