@@ -28,17 +28,25 @@ import DashboardLayout from '../../components/DashboardLayout';
 import InternshipCard from '../../components/internship/InternshipCard';
 import ApplyComingSoonModal from '../../components/internship/ApplyComingSoonModal';
 import { getInternships } from '../../services/internship.service';
+import { getWorkLogSummary } from '../../services/worklog.service';
 
 export default function StudentDashboard({ darkMode, setDarkMode, user }) {
   const [activeTab, setActiveTab] = useState('applications');
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Real backend internships
   const [realInternships, setRealInternships] = useState([]);
   const [loadingInternships, setLoadingInternships] = useState(false);
   const [comingSoonModalOpen, setComingSoonModalOpen] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState('');
+  const [workLogSummary, setWorkLogSummary] = useState({
+    totalLogs: 0,
+    draft: 0,
+    submitted: 0,
+    approved: 0,
+    rejected: 0,
+    totalHours: 0
+  });
 
   useEffect(() => {
     const loadRealInternships = async () => {
@@ -56,6 +64,30 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
     };
     loadRealInternships();
   }, []);
+
+  const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
+  let activeUser = user;
+  if (!activeUser && sessionUserStr && sessionUserStr !== 'undefined' && sessionUserStr !== 'null') {
+    try {
+      activeUser = JSON.parse(sessionUserStr);
+    } catch (e) {}
+  }
+  const studentId = activeUser?.id || activeUser?._id || activeUser?.user?.id || activeUser?.user?._id;
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      if (!studentId) return;
+      try {
+        const res = await getWorkLogSummary(studentId);
+        if (res && res.success) {
+          setWorkLogSummary(res.data || {});
+        }
+      } catch (err) {
+        console.error('Failed to fetch work log summary:', err);
+      }
+    };
+    fetchSummary();
+  }, [studentId]);
 
   // Modals state
   const [selectedApp, setSelectedApp] = useState(null);
@@ -253,7 +285,7 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
         </div>
 
         {/* Top Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-blue-500/50 transition-all group">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Applications</span>
@@ -268,6 +300,24 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-1">2 actively under review</p>
+          </div>
+
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-cyan-500/50 transition-all group">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Work Activity</span>
+              <div className="w-11 h-11 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200/60 dark:border-cyan-800/60 flex items-center justify-center text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform">
+                <Clock size={22} />
+              </div>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{workLogSummary.totalHours || 0}h</span>
+              <span className="text-xs font-bold text-cyan-500">Total Logged</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-extrabold mt-1">
+              <span className="text-emerald-500">{workLogSummary.approved || 0} Approved</span>
+              <span className="text-slate-400">•</span>
+              <span className="text-amber-500">{workLogSummary.submitted || 0} Pending</span>
+            </div>
           </div>
 
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-amber-500/50 transition-all group">

@@ -30,22 +30,24 @@ export const createAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: "Student is not selected for this internship." });
     }
 
-    let mentorId = userId; // Default if admin isn't assigning for someone else, but let's check assignment
-    if (role === "mentor") {
+    let mentorId = userId;
+    if (role === "student") {
+      if (studentId !== userId) {
+        return res.status(403).json({ success: false, message: "Can only mark own attendance." });
+      }
+      const MentorAssignment = (await import("../models/MentorAssignment.js")).default;
+      const assignment = await MentorAssignment.findOne({ student: studentId, internship: internshipId, status: "active" });
+      mentorId = assignment ? assignment.mentor : null;
+    } else if (role === "mentor") {
       const assignment = await validateMentorStudentAssignment(userId, studentId, internshipId);
       if (!assignment) {
         return res.status(403).json({ success: false, message: "Not assigned to this student." });
       }
       mentorId = assignment.mentor;
     } else if (role === "admin") {
-      // Find who the mentor is for this student/internship
-      const { validateMentorStudentAssignment } = await import("../utils/assignmentHelper.js");
       const MentorAssignment = (await import("../models/MentorAssignment.js")).default;
       const assignment = await MentorAssignment.findOne({ student: studentId, internship: internshipId, status: "active" });
-      if (!assignment) {
-        return res.status(400).json({ success: false, message: "No active mentor found for this student in this internship." });
-      }
-      mentorId = assignment.mentor;
+      mentorId = assignment ? assignment.mentor : null;
     } else {
        return res.status(403).json({ success: false, message: "Unauthorized role." });
     }
@@ -139,6 +141,12 @@ export const getInternshipAttendance = async (req, res) => {
     
     if (role === "mentor") {
       query.mentorId = userId;
+    } else if (role === "company") {
+      const Internship = (await import("../models/Internship.js")).default;
+      const intern = await Internship.findOne({ _id: internshipId, company: userId });
+      if (!intern) {
+        return res.status(403).json({ success: false, message: "Not authorized to view attendance for this internship." });
+      }
     } else if (role !== "admin") {
       return res.status(403).json({ success: false, message: "Not authorized." });
     }
@@ -154,6 +162,7 @@ export const getInternshipAttendance = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .populate("studentId", "name email avatar")
+      .populate("internshipId", "title company")
       .lean();
 
     const total = await Attendance.countDocuments(query);
@@ -173,6 +182,38 @@ export const getInternshipAttendance = async (req, res) => {
   }
 };
 
+export const getCompanyAllAttendance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { date, internshipId } = req.query;
+
+    const Internship = (await import("../models/Internship.js")).default;
+    const companyInternships = await Internship.find({ company: userId }).select("_id");
+    const internshipIds = companyInternships.map((i) => i._id);
+
+    const query = { internshipId: { $in: internshipIds } };
+    if (internshipId) {
+      query.internshipId = internshipId;
+    }
+    if (date) {
+      query.date = startOfDay(date);
+    }
+
+    const records = await Attendance.find(query)
+      .sort({ date: -1 })
+      .populate("studentId", "name email avatar")
+      .populate("internshipId", "title company")
+      .lean();
+
+    res.json({
+      success: true,
+      data: records
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || "Server error" });
+  }
+};
+
 export const updateAttendance = async (req, res) => {
   try {
     const { id } = req.params;
@@ -185,8 +226,12 @@ export const updateAttendance = async (req, res) => {
       return res.status(404).json({ success: false, message: "Attendance record not found." });
     }
 
-    if (role === "mentor") {
-      if (attendance.mentorId.toString() !== userId) {
+    if (role === "student") {
+      if (attendance.studentId.toString() !== userId) {
+        return res.status(403).json({ success: false, message: "Not authorized to update this record." });
+      }
+    } else if (role === "mentor") {
+      if (attendance.mentorId && attendance.mentorId.toString() !== userId) {
         return res.status(403).json({ success: false, message: "Not authorized to update this record." });
       }
     } else if (role !== "admin") {

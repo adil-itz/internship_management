@@ -15,6 +15,14 @@ import StudentApplicationDetails from './pages/student/StudentApplicationDetails
 import StudentMentorAssignment from './pages/student/StudentMentorAssignment';
 import StudentTasks from './pages/student/StudentTasks';
 import StudentTaskDetails from './pages/student/StudentTaskDetails';
+import StudentWorkLogs from './pages/student/StudentWorkLogs';
+import CreateWorkLog from './pages/student/CreateWorkLog';
+import WorkLogDetails from './pages/student/WorkLogDetails';
+import StudentAttendance from './pages/student/StudentAttendance';
+import MentorAttendance from './pages/mentor/MentorAttendance';
+import AdminAttendance from './pages/admin/AdminAttendance';
+import MentorWorkLogs from './pages/mentor/MentorWorkLogs';
+import AdminWorkLogs from './pages/admin/AdminWorkLogs';
 import ChatPage from './pages/ChatPage';
 
 import CompanyInternships from './pages/company/CompanyInternships';
@@ -24,6 +32,7 @@ import CompanyInternshipApplications from './pages/company/CompanyInternshipAppl
 import CompanyAllApplications from './pages/company/CompanyAllApplications';
 import CompanyApplicationDetails from './pages/company/CompanyApplicationDetails';
 import CompanyMentorAssignments from './pages/company/CompanyMentorAssignments';
+import CompanyAttendance from './pages/company/CompanyAttendance';
 
 import AssignedInterns from './pages/mentor/AssignedInterns';
 import InternDetails from './pages/mentor/InternDetails';
@@ -166,6 +175,46 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/student/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentAttendance darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/worklogs"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentWorkLogs darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/worklogs/create"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CreateWorkLog darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/worklogs/:id"
+          element={
+            <ProtectedRoute allowedRoles={['student', 'mentor', 'admin']}>
+              <WorkLogDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/worklogs/:id/edit"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <CreateWorkLog darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/student/resources"
@@ -256,6 +305,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/company/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyAttendance darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/mentor/interns"
@@ -270,6 +327,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['mentor']}>
               <InternDetails darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <MentorAttendance darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/worklogs"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <MentorWorkLogs darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/worklogs/:id"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <WorkLogDetails darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
@@ -375,6 +456,30 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminTasks darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/attendance"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminAttendance darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/worklogs"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminWorkLogs darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/worklogs/:id"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <WorkLogDetails darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
