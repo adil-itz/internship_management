@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import ApplicationFormModal from '../../components/applications/ApplicationFormModal';
+import RatingSummary from '../../components/feedback/RatingSummary';
+import ReviewList from '../../components/feedback/ReviewList';
+import StudentInternshipRating from '../../components/feedback/StudentInternshipRating';
 import { getInternshipById } from '../../services/internship.service';
 import { getMyApplications } from '../../services/application.service';
+import { getInternshipRatings, getStudentFeedback } from '../../services/feedback.service';
 import {
   ArrowLeft,
   Building2,
@@ -20,8 +24,8 @@ import {
   Users,
   Send,
   BookOpen,
-  FileText,
-  ChevronRight
+  Star,
+  Edit
 } from 'lucide-react';
 
 export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
@@ -34,6 +38,12 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
   const [existingApp, setExistingApp] = useState(null);
   const [applyModalOpen, setApplyModalOpen] = useState(false);
+
+  const [ratingSummary, setRatingSummary] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
+  const [existingStudentFeedback, setExistingStudentFeedback] = useState(null);
+  const [rateModalOpen, setRateModalOpen] = useState(false);
 
   const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
   let activeUser = user;
@@ -48,6 +58,7 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
   useEffect(() => {
     if (id) {
       fetchDetails();
+      fetchRatings(1);
       if (role === 'student') {
         checkStudentApplication();
       }
@@ -67,8 +78,21 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
     } catch (err) {
       console.error(err);
       setError(err.message || 'Failed to load internship details');
-    } fontally: {
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRatings = async (page = 1) => {
+    try {
+      const res = await getInternshipRatings(id, { page, limit: 10 });
+      if (res && res.success) {
+        setRatingSummary(res.summary);
+        setReviews(res.reviews || []);
+        if (res.pagination) setPagination(res.pagination);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -80,6 +104,16 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
           (a) => (a.internship?._id === id || a.internship === id) && a.status !== 'withdrawn'
         );
         if (found) setExistingApp(found);
+      }
+
+      if (activeUser?.id || activeUser?._id) {
+        const fbRes = await getStudentFeedback(activeUser.id || activeUser._id);
+        if (fbRes && fbRes.success && fbRes.feedbacks) {
+          const foundFb = fbRes.feedbacks.find(
+            f => f.type === 'internship_rating' && (f.internshipId?._id === id || f.internshipId === id)
+          );
+          if (foundFb) setExistingStudentFeedback(foundFb);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -146,7 +180,10 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
   const companyName = typeof company === 'object' && company !== null ? company.name : 'Company';
   const companyEmail = typeof company === 'object' && company !== null ? company.email : '';
+  const companyId = typeof company === 'object' && company !== null ? company._id : company;
   const isCompanyOwner = role === 'company' && typeof company === 'object' && company !== null && (company._id === activeUser?.id || company.toString() === activeUser?.id);
+
+  const isEligibleToRate = role === 'student' && existingApp && existingApp.status === 'selected';
 
   const formattedDeadline = applicationDeadline
     ? new Date(applicationDeadline).toLocaleDateString('en-GB', {
@@ -220,7 +257,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
   return (
     <DashboardLayout user={activeUser} darkMode={darkMode} setDarkMode={setDarkMode}>
       <div className="space-y-6 max-w-5xl mx-auto">
-        
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
@@ -230,7 +266,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
         <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-            
             <div className="flex items-start gap-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-lg shrink-0">
                 {companyName ? companyName.charAt(0).toUpperCase() : <Building2 size={28} />}
@@ -244,7 +279,13 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
                 </h1>
                 <p className="text-xs font-bold text-slate-500 flex items-center gap-2">
                   <Building2 size={14} className="text-blue-500" />
-                  <span>{companyName}</span>
+                  {companyId ? (
+                    <Link to={`/company/${companyId}`} className="hover:text-blue-600 underline">
+                      {companyName}
+                    </Link>
+                  ) : (
+                    <span>{companyName}</span>
+                  )}
                   {companyEmail && <span className="text-slate-400">({companyEmail})</span>}
                 </p>
               </div>
@@ -294,7 +335,6 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            
             <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-3">
               <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
                 <BookOpen size={16} className="text-blue-500" />
@@ -358,10 +398,34 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
               </div>
             )}
 
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+                  <Star size={20} className="text-amber-500 fill-amber-400" />
+                  <span>Internship Experience & Reviews</span>
+                </h3>
+
+                {isEligibleToRate && (
+                  <button
+                    onClick={() => setRateModalOpen(true)}
+                    className="px-4 py-2 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {existingStudentFeedback ? <Edit size={14} /> : <Star size={14} />}
+                    <span>{existingStudentFeedback ? 'Edit Your Review' : 'Rate This Internship'}</span>
+                  </button>
+                )}
+              </div>
+
+              <RatingSummary summary={ratingSummary} type="internship" />
+              <ReviewList
+                reviews={reviews}
+                pagination={pagination}
+                onPageChange={(p) => fetchRatings(p)}
+              />
+            </div>
           </div>
 
           <div className="space-y-6">
-            
             {eligibility && (
               <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-4">
                 <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -453,11 +517,8 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
                 </button>
               )}
             </div>
-
           </div>
-
         </div>
-
       </div>
 
       <ApplicationFormModal
@@ -470,6 +531,20 @@ export default function InternshipDetailsPage({ darkMode, setDarkMode, user }) {
           checkStudentApplication();
         }}
       />
+
+      {rateModalOpen && (
+        <StudentInternshipRating
+          isOpen={true}
+          onClose={() => setRateModalOpen(false)}
+          internshipId={id}
+          internshipTitle={title}
+          existingFeedback={existingStudentFeedback}
+          onSuccess={() => {
+            fetchRatings(1);
+            checkStudentApplication();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

@@ -58,6 +58,11 @@ import ResourceExploration from './pages/student/ResourceExploration';
 import ResourceDetails from './pages/student/ResourceDetails';
 import CourseExploration from './pages/student/CourseExploration';
 import CourseDetails from './pages/student/CourseDetails';
+import StudentFeedback from './pages/student/StudentFeedback';
+import MentorFeedback from './pages/mentor/MentorFeedback';
+import CompanyFeedback from './pages/company/CompanyFeedback';
+import AdminFeedback from './pages/admin/AdminFeedback';
+import CompanyProfilePage from './pages/CompanyProfilePage';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -248,6 +253,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/student/feedback"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentFeedback darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/company/:id"
+          element={
+            <ProtectedRoute>
+              <CompanyProfilePage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/company/internships"
@@ -313,6 +334,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/company/feedback"
+          element={
+            <ProtectedRoute allowedRoles={['company']}>
+              <CompanyFeedback darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/mentor/interns"
@@ -343,6 +372,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['mentor']}>
               <MentorWorkLogs darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mentor/feedback"
+          element={
+            <ProtectedRoute allowedRoles={['mentor']}>
+              <MentorFeedback darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
@@ -536,6 +573,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminEditCourse darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/feedback"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminFeedback darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
