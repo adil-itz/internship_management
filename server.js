@@ -47,6 +47,7 @@ import internshipTaskRoutes from "./server/routes/internshipTask.routes.js";
 import chatRoutes from "./server/routes/chat.routes.js";
 import attendanceRoutes from "./server/routes/attendance.routes.js";
 import worklogRoutes from "./server/routes/worklog.routes.js";
+import feedbackRoutes from "./server/routes/feedback.routes.js";
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -60,6 +61,7 @@ app.use("/api/internship-tasks", internshipTaskRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/worklogs", worklogRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));
