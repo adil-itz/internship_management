@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Internship Certificate</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600;700&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1122px;
+      height: 793px;
+    }
+    .certificate-container {
+      width: 1122px;
+      height: 793px;
+      position: relative;
+      background-image: url('{{backgroundImage}}');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      font-family: 'Montserrat', sans-serif;
+      color: #1a237e;
+    }
+    
+    .student-name {
+      position: absolute;
+      top: 350px;
+      width: 100%;
+      text-align: center;
+      font-size: 32px;
+      font-family: 'Dancing Script', cursive;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #3949ab;
+    }
+    
+    .duration {
+      position: absolute;
+      top: 575px;
+      left: 170px;
+      width: 250px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .mentor-signature {
+      position: absolute;
+      top: 575px;
+      left: 450px;
+      width: 220px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .company-name {
+      position: absolute;
+      top: 575px;
+      right: 170px;
+      width: 250px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    .qr-code {
+      position: absolute;
+      bottom: 115px;
+      right: 168px;
+      width: 130px;
+      height: 130px;
+    }
+    
+    .qr-code img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .cert-id {
+      position: absolute;
+      bottom: 40px;
+      right: 50px;
+      font-size: 10px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="certificate-container">
+    <div class="cert-id">ID: {{certificateId}}</div>
+    
+    <div class="student-name">{{studentName}}</div>
+    
+    <div class="duration">{{startDate}} - {{endDate}}</div>
+    <div class="mentor-signature">{{mentorName}}</div>
+    <div class="company-name">{{companyName}}</div>
+    
+    <div class="qr-code">
+      <img src="{{qrCode}}" alt="QR Code"/>
+    </div>
+  </div>
+</body>
+</html>
