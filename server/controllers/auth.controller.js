@@ -3,8 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import generateOtp from "../utils/generateOtp.js";
 import sendEmail from "../utils/sendEmail.js";
-import speakeasy from "speakeasy";
-import crypto from "crypto";
 
 export const signup = async (req, res) => {
   try {
@@ -52,24 +50,23 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     if (!user.password) {
       return res.status(400).json({ message: "Please login with Google" });
     }
-    
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     if (user.twoFactorEnabled) {
-      // Generate OTP
       const otp = generateOtp();
       user.twoFactorOtp = otp;
-      user.twoFactorOtpExpires = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+      user.twoFactorOtpExpires = new Date(Date.now() + 5 * 60 * 1000);
       await user.save();
+      console.log(`🔑 2FA Login OTP for ${user.email}: ${otp}`);
 
-      // Send Email
       await sendEmail({
         to: user.email,
         subject: "InterFlow - 2FA Login OTP",
@@ -84,13 +81,12 @@ export const login = async (req, res) => {
             </div>
             <p>This OTP will expire in 5 minutes.</p>
           </div>
-        \`,
+        `,
       });
 
-      // Issue a short-lived challenge token for 2FA verification
       const challengeToken = jwt.sign(
         { id: user._id, role: user.role, is2FAChallenge: true },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || "12121212",
         { expiresIn: "5m" }
       );
       return res.status(200).json({
@@ -100,9 +96,9 @@ export const login = async (req, res) => {
         message: "OTP sent to your registered email"
       });
     }
-    
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    
+
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "12121212", { expiresIn: "1d" });
+
     res.status(200).json({ 
       token, 
       user: { id: user._id, name: user.name, email: user.email, role: user.role } 
@@ -131,13 +127,13 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "No account found with this email address" });
     }
     const otp = generateOtp();
-    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // Valid for 15 minutes
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
 
     user.resetOtp = otp;
     user.resetOtpExpires = otpExpires;
     await user.save();
 
-    const emailResult = await sendEmail({
+    await sendEmail({
       to: user.email,
       subject: "InternFlow - Password Reset OTP",
       text: `Your password reset OTP is: ${otp}. It is valid for 15 minutes.`,
@@ -153,8 +149,6 @@ export const forgotPassword = async (req, res) => {
         </div>
       `,
     });
-
-    console.log(`🔑 OTP generated for ${user.email}: ${otp}`);
 
     res.status(200).json({
       success: true,
@@ -224,17 +218,19 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};export const setup2FA = async (req, res) => {
+};
+
+export const setup2FA = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (user.twoFactorEnabled) return res.status(400).json({ message: '2FA is already enabled' });
 
-    // Generate Setup OTP
     const otp = generateOtp();
     user.twoFactorOtp = otp;
-    user.twoFactorOtpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    user.twoFactorOtpExpires = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
+    console.log(`🔑 2FA Setup OTP for ${user.email}: ${otp}`);
 
     await sendEmail({
       to: user.email,
@@ -297,7 +293,7 @@ export const verify2FALogin = async (req, res) => {
   try {
     const { challengeToken, token } = req.body;
     
-    const decoded = jwt.verify(challengeToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(challengeToken, process.env.JWT_SECRET || "12121212");
     if (!decoded.is2FAChallenge) return res.status(400).json({ message: 'Invalid challenge token' });
 
     const user = await User.findById(decoded.id).select('+twoFactorOtp +twoFactorOtpExpires');
@@ -313,12 +309,11 @@ export const verify2FALogin = async (req, res) => {
       return res.status(400).json({ message: 'OTP has expired. Please log in again.' });
     }
 
-    // Clear OTP after successful use
     user.twoFactorOtp = undefined;
     user.twoFactorOtpExpires = undefined;
     await user.save();
 
-    const finalToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const finalToken = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || "12121212", { expiresIn: '1d' });
     
     res.status(200).json({
       success: true,
@@ -331,7 +326,6 @@ export const verify2FALogin = async (req, res) => {
 };
 
 export const verifyBackupCode = async (req, res) => {
-  // Not used in Email OTP flow, but keeping endpoint for backward compatibility
   res.status(400).json({ message: 'Backup codes are not supported in Email OTP 2FA mode' });
 };
 

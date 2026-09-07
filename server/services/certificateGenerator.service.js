@@ -17,10 +17,12 @@ export const generateCertificatePDF = async (data) => {
     const templatePath = path.join(__dirname, '..', 'templates', 'certificate', 'certificate.html');
     let htmlContent = fs.readFileSync(templatePath, 'utf-8');
 
-    // Read background image
+    let bgImageSrc = '';
     const bgImagePath = path.join(__dirname, '..', 'templates', 'certificate', 'assets', 'certificate-background.png');
-    const bgImageBase64 = fs.readFileSync(bgImagePath, 'base64');
-    const bgImageSrc = `data:image/png;base64,${bgImageBase64}`;
+    if (fs.existsSync(bgImagePath)) {
+      const bgImageBase64 = fs.readFileSync(bgImagePath, 'base64');
+      bgImageSrc = `data:image/png;base64,${bgImageBase64}`;
+    }
 
     // Generate QR Code
     const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-certificate/${data.certificateId}`;
@@ -59,6 +61,9 @@ export const generateCertificatePDF = async (data) => {
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     
     const outputDir = path.join(__dirname, '..', 'generated', 'certificates');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
     const fileName = `${data.certificateId}.pdf`;
     const outputPath = path.join(outputDir, fileName);
 
@@ -75,6 +80,6 @@ export const generateCertificatePDF = async (data) => {
     return outputPath;
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    throw new Error('Failed to generate PDF certificate');
+    throw new Error(`Failed to generate PDF certificate: ${error.message}`);
   }
 };

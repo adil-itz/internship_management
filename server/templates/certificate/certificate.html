@@ -4,103 +4,312 @@
   <meta charset="UTF-8">
   <title>Internship Certificate</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Great+Vibes&family=Montserrat:wght@400;500;600;700;800&display=swap');
     
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    body {
       width: 1122px;
       height: 793px;
+      overflow: hidden;
+      background-color: #ffffff;
+      font-family: 'Montserrat', sans-serif;
+      color: #0f172a;
     }
-    .certificate-container {
+
+    .certificate-card {
       width: 1122px;
       height: 793px;
       position: relative;
-      background-image: url('{{backgroundImage}}');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      font-family: 'Montserrat', sans-serif;
-      color: #1a237e;
-    }
-    
-    .student-name {
-      position: absolute;
-      top: 350px;
-      width: 100%;
-      text-align: center;
-      font-size: 32px;
-      font-family: 'Dancing Script', cursive;
-      font-weight: 700;
-      letter-spacing: 2px;
-      color: #3949ab;
-    }
-    
-    .duration {
-      position: absolute;
-      top: 575px;
-      left: 170px;
-      width: 250px;
-      text-align: center;
-      font-size: 13px;
-      font-weight: 600;
+      background: #ffffff;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
-    .mentor-signature {
+    .outer-border {
+      width: 100%;
+      height: 100%;
+      border: 3px solid #1e3a8a;
+      padding: 12px;
+      position: relative;
+      border-radius: 4px;
+    }
+
+    .inner-border {
+      width: 100%;
+      height: 100%;
+      border: 1px solid #94a3b8;
+      padding: 40px 60px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .corner-decor {
       position: absolute;
-      top: 575px;
-      left: 450px;
+      width: 40px;
+      height: 40px;
+      border-color: #1e3a8a;
+      border-style: solid;
+    }
+    .top-left { top: -2px; left: -2px; border-width: 4px 0 0 4px; }
+    .top-right { top: -2px; right: -2px; border-width: 4px 4px 0 0; }
+    .bottom-left { bottom: -2px; left: -2px; border-width: 0 0 4px 4px; }
+    .bottom-right { bottom: -2px; right: -2px; border-width: 0 4px 4px 0; }
+
+    .header-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-name {
+      font-family: 'Cinzel', serif;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #1e3a8a;
+      text-transform: uppercase;
+    }
+
+    .brand-tagline {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .cert-title-section {
+      margin-top: 10px;
+    }
+
+    .cert-title {
+      font-family: 'Cinzel', serif;
+      font-size: 34px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 2px;
+    }
+
+    .cert-subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #64748b;
+      margin-top: 6px;
+    }
+
+    .recipient-name {
+      font-family: 'Great Vibes', cursive;
+      font-size: 56px;
+      color: #1d4ed8;
+      margin: 15px 0 5px 0;
+      line-height: 1;
+    }
+
+    .name-underline {
+      width: 400px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #1d4ed8, transparent);
+      margin: 0 auto 15px auto;
+    }
+
+    .cert-description {
+      font-size: 14px;
+      color: #334155;
+      max-w: 700px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .internship-title-highlight {
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+
+    .company-highlight {
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .footer-signatures {
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-top: 25px;
+      padding: 0 20px;
+    }
+
+    .sig-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       width: 220px;
-      text-align: center;
+    }
+
+    .sig-line {
+      width: 100%;
+      height: 1px;
+      background-color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .sig-value {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
+      color: #0f172a;
     }
-    
-    .company-name {
-      position: absolute;
-      top: 575px;
-      right: 170px;
-      width: 250px;
+
+    .sig-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    .seal-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gold-badge {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b, #d97706, #b45309);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+      border: 3px solid #fef3c7;
+      color: white;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      font-weight: 800;
       text-align: center;
-      font-size: 13px;
-      font-weight: 600;
+      letter-spacing: 1px;
     }
-    
-    .qr-code {
-      position: absolute;
-      bottom: 115px;
-      right: 168px;
-      width: 130px;
-      height: 130px;
+
+    .qr-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
     }
-    
-    .qr-code img {
+
+    .qr-frame {
+      width: 85px;
+      height: 85px;
+      padding: 4px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .qr-frame img {
       width: 100%;
       height: 100%;
       object-fit: contain;
     }
-    
-    .cert-id {
+
+    .qr-caption {
+      font-size: 9px;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .cert-id-badge {
       position: absolute;
-      bottom: 40px;
-      right: 50px;
+      bottom: 12px;
+      right: 20px;
       font-size: 10px;
-      color: #7f8c8d;
+      font-weight: 600;
+      color: #94a3b8;
+      font-family: monospace;
     }
   </style>
 </head>
 <body>
-  <div class="certificate-container">
-    <div class="cert-id">ID: {{certificateId}}</div>
-    
-    <div class="student-name">{{studentName}}</div>
-    
-    <div class="duration">{{startDate}} - {{endDate}}</div>
-    <div class="mentor-signature">{{mentorName}}</div>
-    <div class="company-name">{{companyName}}</div>
-    
-    <div class="qr-code">
-      <img src="{{qrCode}}" alt="QR Code"/>
+  <div class="certificate-card">
+    <div class="outer-border">
+      <div class="inner-border">
+        <div class="corner-decor top-left"></div>
+        <div class="corner-decor top-right"></div>
+        <div class="corner-decor bottom-left"></div>
+        <div class="corner-decor bottom-right"></div>
+
+        <div class="header-logo">
+          <div class="brand-name">InterFlow</div>
+          <div class="brand-tagline">Internship Management Platform</div>
+        </div>
+
+        <div class="cert-title-section">
+          <div class="cert-title">Certificate of Completion</div>
+          <div class="cert-subtitle">This is proudly presented to</div>
+        </div>
+
+        <div>
+          <div class="recipient-name">{{studentName}}</div>
+          <div class="name-underline"></div>
+        </div>
+
+        <div class="cert-description">
+          For successfully completing the official internship program in <span class="internship-title-highlight">{{internshipTitle}}</span> hosted by <span class="company-highlight">{{companyName}}</span> from <strong>{{startDate}}</strong> to <strong>{{endDate}}</strong>.
+        </div>
+
+        <div class="footer-signatures">
+          <div class="sig-block">
+            <div class="sig-value">{{startDate}} - {{endDate}}</div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Internship Duration</div>
+          </div>
+
+          <div class="sig-block">
+            <div class="sig-value">{{mentorName}}</div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Supervising Mentor</div>
+          </div>
+
+          <div class="seal-container">
+            <div class="gold-badge">VERIFIED<br>OFFICIAL</div>
+          </div>
+
+          <div class="sig-block">
+            <div class="sig-value">{{companyName}}</div>
+            <div class="sig-line"></div>
+            <div class="sig-label">Host Company</div>
+          </div>
+
+          <div class="qr-block">
+            <div class="qr-frame">
+              <img src="{{qrCode}}" alt="Verification QR Code"/>
+            </div>
+            <div class="qr-caption">Scan to Verify</div>
+          </div>
+        </div>
+
+        <div class="cert-id-badge">ID: {{certificateId}}</div>
+      </div>
     </div>
   </div>
 </body>

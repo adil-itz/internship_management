@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
 import AssignmentStatusBadge from '../../components/mentor/AssignmentStatusBadge';
 import TaskProgressBar from '../../components/tasks/TaskProgressBar';
-import { getMyAssignments } from '../../services/mentorAssignment.service';
+import { getMyAssignments, updateAssignmentStatus } from '../../services/mentorAssignment.service';
 import { getTasksByIntern } from '../../services/internshipTask.service';
 import { Users, Building2, Mail, ChevronRight, AlertCircle, CheckCircle2, PlayCircle, Clock, AlertTriangle, Send } from 'lucide-react';
 
@@ -135,7 +135,25 @@ export default function AssignedInterns({ darkMode, setDarkMode, user }) {
                       </div>
                     </div>
 
-                    <AssignmentStatusBadge status={ass.status} />
+                    <div className="flex items-center gap-2">
+                      <AssignmentStatusBadge status={ass.status} />
+                      <select
+                        value={ass.status}
+                        onChange={async (e) => {
+                          try {
+                            await updateAssignmentStatus(ass._id, { status: e.target.value });
+                            fetchAssignmentsAndStats();
+                          } catch (err) {
+                            alert(err.message || 'Failed to update status');
+                          }
+                        }}
+                        className="px-2 py-1 text-[11px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold cursor-pointer focus:outline-none"
+                      >
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                      </select>
+                    </div>
                   </div>
 
                   <div className="space-y-3 text-xs">

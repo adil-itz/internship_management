@@ -32,9 +32,12 @@ export const generateCertificate = async (req, res) => {
     const assignment = await MentorAssignment.findOne({
       internship: internshipId,
       student: studentId
-    }).populate('internship student company mentor');
+    }).populate([
+      { path: 'internship', populate: { path: 'company', select: 'name' } },
+      { path: 'student', select: 'name email' },
+      { path: 'mentor', select: 'name email' }
+    ]);
 
-    // Here we consider "completed" status in MentorAssignment as criteria for eligibility
     if (!assignment) {
       return res.status(404).json({ message: 'Internship participation not found' });
     }
@@ -43,12 +46,11 @@ export const generateCertificate = async (req, res) => {
       return res.status(400).json({ message: 'Internship must be completed to generate a certificate' });
     }
 
-    // Prepare data
-    const studentName = assignment.student.name;
-    const internshipTitle = assignment.internship.title;
-    const companyId = assignment.internship.company;
-    const company = await User.findById(companyId);
-    const companyName = company ? company.name : 'Company';
+    const studentName = assignment.student ? assignment.student.name : 'Student';
+    const internshipTitle = assignment.internship ? assignment.internship.title : 'Internship';
+    const companyObj = assignment.internship ? assignment.internship.company : null;
+    const companyId = companyObj ? (companyObj._id || companyObj) : null;
+    const companyName = companyObj && typeof companyObj === 'object' && companyObj.name ? companyObj.name : 'Company';
     
     const mentorId = assignment.mentor ? assignment.mentor._id : null;
     const mentorName = assignment.mentor ? assignment.mentor.name : 'Mentor';
