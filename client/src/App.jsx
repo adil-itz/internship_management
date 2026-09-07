@@ -63,6 +63,10 @@ import MentorFeedback from './pages/mentor/MentorFeedback';
 import CompanyFeedback from './pages/company/CompanyFeedback';
 import AdminFeedback from './pages/admin/AdminFeedback';
 import CompanyProfilePage from './pages/CompanyProfilePage';
+import TwoFactorLoginPage from './pages/TwoFactorLoginPage';
+import StudentCertificates from './pages/student/StudentCertificates';
+import PublicCertificateVerification from './pages/PublicCertificateVerification';
+import AccountSecurityPage from './pages/AccountSecurityPage';
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -86,6 +90,8 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="/login" element={<LoginPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
+        <Route path="/login/2fa" element={<TwoFactorLoginPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
+        <Route path="/verify-certificate/:certificateId" element={<PublicCertificateVerification darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="/register" element={<RegisterPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage darkMode={darkMode} setDarkMode={setDarkMode} />} />
@@ -106,6 +112,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/settings/security"
+          element={
+            <ProtectedRoute>
+              <AccountSecurityPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
         
         <Route
           path="/dashboard/student/profile"
@@ -116,6 +130,14 @@ function App() {
           }
         />
 
+        <Route
+          path="/student/certificates"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <StudentCertificates darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/student/internships"
           element={

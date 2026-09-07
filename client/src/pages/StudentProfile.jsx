@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import ResumeSection from '../components/ResumeSection';
+import TwoFactorSettings from '../components/TwoFactorSettings';
 import { getStudentProfile, updateStudentProfile } from '../services/student.service';
 import { 
   User, Mail, Phone, MapPin, Calendar, Briefcase, 
@@ -603,10 +604,13 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
 
           {/* Resume Section (only visible when not editing profile info to keep focus) */}
           {!isEditing && (
-            <ResumeSection 
-              resume={currentData?.resume} 
-              onResumeUpdate={handleResumeUpdate} 
-            />
+            <>
+              <ResumeSection 
+                resume={currentData?.resume} 
+                onResumeUpdate={handleResumeUpdate} 
+              />
+              <TwoFactorSettings />
+            </>
           )}
 
           {/* Action Buttons */}

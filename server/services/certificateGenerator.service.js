@@ -59,6 +59,9 @@ export const generateCertificatePDF = async (data) => {
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
     
     const outputDir = path.join(__dirname, '..', 'generated', 'certificates');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
     const fileName = `${data.certificateId}.pdf`;
     const outputPath = path.join(outputDir, fileName);
 
@@ -75,6 +78,6 @@ export const generateCertificatePDF = async (data) => {
     return outputPath;
   } catch (error) {
     console.error('PDF Generation Error:', error);
-    throw new Error('Failed to generate PDF certificate');
+    throw new Error(`Failed to generate PDF certificate: ${error.message}`);
   }
 };

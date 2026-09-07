@@ -86,6 +86,16 @@ export default function LoginPage({ darkMode, setDarkMode }) {
         throw new Error(data.message || 'Login failed. Please check your credentials.');
       }
 
+      if (data.requiresTwoFactor) {
+        navigate('/login/2fa', {
+          state: {
+            challengeToken: data.challengeToken,
+            rememberMe,
+          },
+        });
+        return;
+      }
+
       if (rememberMe) {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');

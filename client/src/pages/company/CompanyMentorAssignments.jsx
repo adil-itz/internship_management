@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import AssignmentStatusBadge from '../../components/mentor/AssignmentStatusBadge';
 import { getCompanyInternships } from '../../services/internship.service';
-import { getInternshipAssignments } from '../../services/mentorAssignment.service';
+import { getInternshipAssignments, updateAssignmentStatus } from '../../services/mentorAssignment.service';
 import { UserCheck, Building2, Calendar, Mail, AlertCircle, Briefcase } from 'lucide-react';
 
 export default function CompanyMentorAssignments({ darkMode, setDarkMode, user }) {
@@ -118,6 +118,7 @@ export default function CompanyMentorAssignments({ darkMode, setDarkMode, user }
                   <th className="p-4">Mentor</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Assigned Date</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -139,6 +140,24 @@ export default function CompanyMentorAssignments({ darkMode, setDarkMode, user }
                       </td>
                       <td className="p-4 font-bold text-slate-600 dark:text-slate-300">
                         {new Date(ass.assignedAt || ass.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="p-4 text-right">
+                        <select
+                          value={ass.status}
+                          onChange={async (e) => {
+                            try {
+                              await updateAssignmentStatus(ass._id, { status: e.target.value });
+                              fetchAssignments(selectedInternshipId);
+                            } catch (err) {
+                              alert(err.message || 'Failed to update status');
+                            }
+                          }}
+                          className="px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-bold cursor-pointer focus:outline-none"
+                        >
+                          <option value="active">Active</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
                       </td>
                     </tr>
                   );
