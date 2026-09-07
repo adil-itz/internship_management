@@ -41,6 +41,21 @@ const userSchema = new mongoose.Schema(
     resetOtp: String,
 
     resetOtpExpires: Date,
+
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
+
+    twoFactorOtp: {
+      type: String,
+      select: false,
+    },
+
+    twoFactorOtpExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
