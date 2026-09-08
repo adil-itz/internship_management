@@ -1,5 +1,7 @@
 import Application from "../models/Application.js";
 import Internship from "../models/Internship.js";
+import User from "../models/User.js";
+import { notifyApplicationStatus, notifyInterviewScheduled } from "../services/notification.service.js";
 
 export const createApplication = async (req, res) => {
   try {
@@ -178,7 +180,8 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    if (req.user.role !== "admin" && application.internship.company.toString() !== req.user.id) {
+    const userId = req.user.id || req.user._id;
+    if (req.user.role !== "admin" && application.internship.company.toString() !== userId.toString()) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
@@ -204,12 +207,12 @@ export const updateApplicationStatus = async (req, res) => {
     await application.save();
 
     const fullApp = await Application.findById(application._id).populate('candidate internship');
-    if (fullApp) {
-      const company = await import('../models/User.js').then(m => m.default.findById(fullApp.internship.company));
-      if (company) {
-        import('../services/notification.service.js').then(({ notifyApplicationStatus }) => {
-          notifyApplicationStatus(fullApp, fullApp.internship, fullApp.candidate, company, currentStatus).catch(console.error);
-        });
+    if (fullApp && fullApp.internship && fullApp.candidate) {
+      const company = await User.findById(fullApp.internship.company);
+      if (status === 'interview_scheduled' && fullApp.interview) {
+        notifyInterviewScheduled(fullApp, fullApp.internship, fullApp.candidate, company || { name: 'Company' }).catch(console.error);
+      } else {
+        notifyApplicationStatus(fullApp, fullApp.internship, fullApp.candidate, company || { name: 'Company' }, currentStatus).catch(console.error);
       }
     }
 
@@ -225,14 +228,15 @@ export const updateApplicationStatus = async (req, res) => {
 
 export const scheduleInterview = async (req, res) => {
   try {
-    const { date, time, mode, meetingLink, location, notes } = req.body;
+    const { date, time, mode, meetingLink, location, notes, status } = req.body;
 
     const application = await Application.findById(req.params.id).populate("internship");
     if (!application) {
       return res.status(404).json({ success: false, message: "Application not found" });
     }
 
-    if (req.user.role !== "admin" && application.internship.company.toString() !== req.user.id) {
+    const userId = req.user.id || req.user._id;
+    if (req.user.role !== "admin" && application.internship.company.toString() !== userId.toString()) {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
@@ -248,20 +252,22 @@ export const scheduleInterview = async (req, res) => {
     }
 
     application.interview = {
-      date, time, mode, meetingLink, location, notes, status: "scheduled"
+      date,
+      time,
+      mode,
+      meetingLink: mode === "online" ? meetingLink : "",
+      location: mode === "offline" ? location : "",
+      notes: notes || "",
+      status: status || "scheduled"
     };
     application.status = "interview_scheduled";
 
     await application.save();
 
     const fullApp = await Application.findById(application._id).populate('candidate internship');
-    if (fullApp) {
-      const company = await import('../models/User.js').then(m => m.default.findById(fullApp.internship.company));
-      if (company) {
-        import('../services/notification.service.js').then(({ notifyInterviewScheduled }) => {
-          notifyInterviewScheduled(fullApp, fullApp.internship, fullApp.candidate, company).catch(console.error);
-        });
-      }
+    if (fullApp && fullApp.internship && fullApp.candidate) {
+      const company = await User.findById(fullApp.internship.company);
+      notifyInterviewScheduled(fullApp, fullApp.internship, fullApp.candidate, company || { name: 'Company' }).catch(console.error);
     }
 
     res.json({ success: true, message: "Interview scheduled", application });

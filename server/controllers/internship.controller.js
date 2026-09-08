@@ -1,4 +1,5 @@
 import Internship from "../models/Internship.js";
+import User from "../models/User.js";
 
 export const createInternship = async (req, res) => {
   try {
@@ -69,7 +70,6 @@ export const createInternship = async (req, res) => {
 
     const createdInternship = await internship.save();
 
-    // Fetch company info for the notification
     const company = await User.findById(req.user.id);
     if (company && createdInternship.status === 'published') {
       import('../services/notification.service.js').then(({ notifyNewInternship }) => {

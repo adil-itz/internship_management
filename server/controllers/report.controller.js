@@ -135,15 +135,27 @@ export const exportPDF = async (req, res) => {
         ];
         title = 'Mentor Analytics Report';
         break;
+      case 'students':
+        data = await reportService.getStudentWiseReport(startDate, endDate);
+        columns = [
+          { key: 'studentName', label: 'Student' },
+          { key: 'email', label: 'Email' },
+          { key: 'applicationsCount', label: 'Applications' },
+          { key: 'acceptedCount', label: 'Accepted' }
+        ];
+        title = 'Student Analytics Report';
+        break;
       default:
         return res.status(400).json({ success: false, message: "Invalid reportType or not supported for PDF" });
     }
 
-    const pdfBuffer = await reportExportService.exportToPDF(title, columns, data);
-    
+    const rawBuffer = await reportExportService.exportToPDF(title, columns, data);
+    const buffer = Buffer.from(rawBuffer);
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=${reportType}-report.pdf`);
-    res.status(200).send(pdfBuffer);
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('Content-Disposition', `attachment; filename="${reportType}-report.pdf"`);
+    res.status(200).send(buffer);
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -30,14 +30,14 @@ export const createAttendance = async (req, res) => {
       return res.status(400).json({ success: false, message: "Student is not selected for this internship." });
     }
 
-    let mentorId = userId;
+    let mentorId = req.body.mentorId || null;
     if (role === "student") {
       if (studentId !== userId) {
         return res.status(403).json({ success: false, message: "Can only mark own attendance." });
       }
       const MentorAssignment = (await import("../models/MentorAssignment.js")).default;
       const assignment = await MentorAssignment.findOne({ student: studentId, internship: internshipId, status: "active" });
-      mentorId = assignment ? assignment.mentor : null;
+      mentorId = assignment ? assignment.mentor : (req.body.mentorId || null);
     } else if (role === "mentor") {
       const assignment = await validateMentorStudentAssignment(userId, studentId, internshipId);
       if (!assignment) {
@@ -47,7 +47,7 @@ export const createAttendance = async (req, res) => {
     } else if (role === "admin") {
       const MentorAssignment = (await import("../models/MentorAssignment.js")).default;
       const assignment = await MentorAssignment.findOne({ student: studentId, internship: internshipId, status: "active" });
-      mentorId = assignment ? assignment.mentor : null;
+      mentorId = assignment ? assignment.mentor : (req.body.mentorId || null);
     } else {
        return res.status(403).json({ success: false, message: "Unauthorized role." });
     }

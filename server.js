@@ -94,6 +94,36 @@ const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 initSocket(server);
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+const startServer = (port) => {
+  server.listen(port)
+    .on('listening', () => {
+      console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+    })
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`⚠️ Port ${port} is busy, retrying in 1 second...`);
+        setTimeout(() => {
+          server.close();
+          server.listen(port);
+        }, 1000);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+};
+
+startServer(PORT);
+
+const handleShutdown = () => {
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', handleShutdown);
+process.on('SIGINT', handleShutdown);
+process.once('SIGUSR2', () => {
+  server.close(() => {
+    process.kill(process.pid, 'SIGUSR2');
+  });
 });

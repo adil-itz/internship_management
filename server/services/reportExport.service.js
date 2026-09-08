@@ -64,7 +64,7 @@ export const exportToPDF = async (title, columns, data) => {
     const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' } });
     await browser.close();
 
-    return pdfBuffer;
+    return Buffer.from(pdfBuffer);
   } catch (error) {
     console.error('PDF Export Error:', error);
     throw new Error('Failed to generate PDF');
