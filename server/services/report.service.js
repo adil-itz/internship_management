@@ -2,8 +2,9 @@ import User from "../models/User.js";
 import Internship from "../models/Internship.js";
 import Application from "../models/Application.js";
 import MentorAssignment from "../models/MentorAssignment.js";
+import Attendance from "../models/Attendance.js";
+import WorkLog from "../models/WorkLog.js";
 
-// Helper to build a date match object
 const buildDateMatch = (startDate, endDate, dateField = 'createdAt') => {
   if (!startDate && !endDate) return {};
   const match = {};
@@ -33,12 +34,55 @@ export const getDashboardSummary = async (startDate, endDate) => {
   const assignmentMatch = buildDateMatch(startDate, endDate);
   const totalMentorAssignments = await MentorAssignment.countDocuments(assignmentMatch);
 
+  const attendanceMatch = buildDateMatch(startDate, endDate, 'date');
+  const presentCount = await Attendance.countDocuments({ status: "present", ...attendanceMatch });
+  const absentCount = await Attendance.countDocuments({ status: "absent", ...attendanceMatch });
+  const lateCount = await Attendance.countDocuments({ status: "late", ...attendanceMatch });
+  const halfDayCount = await Attendance.countDocuments({ status: "half-day", ...attendanceMatch });
+  const leaveCount = await Attendance.countDocuments({ status: "leave", ...attendanceMatch });
+  const totalAttendance = presentCount + absentCount + lateCount + halfDayCount + leaveCount;
+  const attendancePercentage = totalAttendance > 0 
+    ? Math.round(((presentCount + (halfDayCount * 0.5)) / totalAttendance) * 100) 
+    : 0;
+
+  const worklogMatch = buildDateMatch(startDate, endDate, 'date');
+  const totalWorkLogs = await WorkLog.countDocuments(worklogMatch);
+  const approvedWorkLogs = await WorkLog.countDocuments({ status: "approved", ...worklogMatch });
+  const rejectedWorkLogs = await WorkLog.countDocuments({ status: "rejected", ...worklogMatch });
+  const submittedWorkLogs = await WorkLog.countDocuments({ status: "submitted", ...worklogMatch });
+  const draftWorkLogs = await WorkLog.countDocuments({ status: "draft", ...worklogMatch });
+
+  const hoursMatch = buildDateMatch(startDate, endDate, 'date');
+  const hoursMatchQuery = Object.keys(hoursMatch).length ? { $match: hoursMatch } : { $match: {} };
+  const hoursResult = await WorkLog.aggregate([
+    hoursMatchQuery,
+    { $group: { _id: null, totalHours: { $sum: "$hoursWorked" } } }
+  ]);
+  const totalHoursWorked = hoursResult[0]?.totalHours || 0;
+
   return {
     totalUsers, totalStudents, totalMentors, totalCompanies,
     internships: { total: totalInternships, active: activeInternships },
     applications: { total: totalApplications, pending: pendingApplications, selected: selectedApplications },
     totalInterviews,
-    totalMentorAssignments
+    totalMentorAssignments,
+    attendance: {
+      present: presentCount,
+      absent: absentCount,
+      late: lateCount,
+      halfDay: halfDayCount,
+      leave: leaveCount,
+      total: totalAttendance,
+      percentage: attendancePercentage
+    },
+    worklog: {
+      totalLogs: totalWorkLogs,
+      approved: approvedWorkLogs,
+      rejected: rejectedWorkLogs,
+      submitted: submittedWorkLogs,
+      draft: draftWorkLogs,
+      totalHours: totalHoursWorked
+    }
   };
 };
 
@@ -46,19 +90,16 @@ export const getMonthlyAnalytics = async (year) => {
   const startYear = new Date(`${year}-01-01`);
   const endYear = new Date(`${year}-12-31T23:59:59.999Z`);
 
-  // Aggregate users
   const userStats = await User.aggregate([
     { $match: { createdAt: { $gte: startYear, $lte: endYear } } },
     { $group: { _id: { $month: "$createdAt" }, count: { $sum: 1 } } }
   ]);
 
-  // Aggregate internships
   const internStats = await Internship.aggregate([
     { $match: { createdAt: { $gte: startYear, $lte: endYear } } },
     { $group: { _id: { $month: "$createdAt" }, count: { $sum: 1 } } }
   ]);
 
-  // Aggregate applications
   const appStats = await Application.aggregate([
     { $match: { createdAt: { $gte: startYear, $lte: endYear } } },
     { $group: { _id: { $month: "$createdAt" }, count: { $sum: 1 } } }
@@ -86,13 +127,11 @@ export const getCompanyWiseReport = async (startDate, endDate, companyId) => {
 
   const companies = await User.find(match).select('name email');
   
-  // To avoid N+1, aggregate internships and apps
   const internMatch = buildDateMatch(startDate, endDate);
   
   const report = await Promise.all(companies.map(async (company) => {
     const totalInternships = await Internship.countDocuments({ company: company._id, ...internMatch });
     
-    // Get apps for this company's internships
     const companyInternships = await Internship.find({ company: company._id }).select('_id');
     const internshipIds = companyInternships.map(i => i._id);
     

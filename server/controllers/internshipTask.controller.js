@@ -3,8 +3,8 @@ import MentorAssignment from "../models/MentorAssignment.js";
 import Application from "../models/Application.js";
 import Internship from "../models/Internship.js";
 import User from "../models/User.js";
+import { notifyNewTask, notifyTaskEvaluation } from "../services/notification.service.js";
 
-// Helper to check overdue status dynamically
 const updateOverdueStatus = async (tasks) => {
   const currentDate = new Date();
   const updates = [];
@@ -31,7 +31,6 @@ export const createTask = async (req, res) => {
     const { internshipId, studentId, title, description, priority, dueDate } = req.body;
     let mentorId = req.body.mentorId || req.user.id;
 
-    // Validate required fields
     if (!internshipId || !studentId || !title || !description || !dueDate) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
     }
@@ -42,14 +41,12 @@ export const createTask = async (req, res) => {
     const student = await User.findById(studentId);
     if (!student) return res.status(404).json({ success: false, message: "Student not found" });
 
-    // Ensure student is selected for this internship
     const application = await Application.findOne({ internship: internshipId, candidate: studentId });
     if (!application || application.status !== "selected") {
       return res.status(403).json({ success: false, message: "Student is not selected for this internship" });
     }
 
     if (req.user.role !== "admin") {
-      // Ensure this mentor is assigned to this student for this internship
       const assignment = await MentorAssignment.findOne({
         internship: internshipId,
         student: studentId,
@@ -61,7 +58,6 @@ export const createTask = async (req, res) => {
         return res.status(403).json({ success: false, message: "You are not assigned as mentor for this intern" });
       }
     } else if (!req.body.mentorId) {
-      // If admin didn't explicitly pass mentorId, check if student has an active assigned mentor
       const activeAssignment = await MentorAssignment.findOne({
         internship: internshipId,
         student: studentId,
@@ -87,62 +83,10 @@ export const createTask = async (req, res) => {
       dueDate: parsedDueDate
     });
 
-    await task.save();
-    res.status(201).json({ success: true, message: "Task created successfully.", task });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
+    const creatorUser = await User.findById(req.user.id || req.user._id);
+    notifyNewTask(task, internship, student, creatorUser || req.user).catch(console.error);
 
-export const getMentorTasks = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const userRole = req.user.role;
-    const { status, priority, internshipId, studentId, mentorId, search, page = 1, limit = 10 } = req.query;
-
-    const query = {};
-    if (userRole === "mentor") {
-      query.mentor = userId;
-    } else if (userRole === "admin" && mentorId) {
-      query.mentor = mentorId;
-    }
-    
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
-    if (internshipId) query.internship = internshipId;
-    if (studentId) query.student = studentId;
-    
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } }
-      ];
-    }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    let tasks = await InternshipTask.find(query)
-      .populate("student", "name email avatar")
-      .populate("mentor", "name email avatar")
-      .populate("internship", "title company")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-      
-    await updateOverdueStatus(tasks);
-
-    const total = await InternshipTask.countDocuments(query);
-
-    res.json({
-      success: true,
-      tasks,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / parseInt(limit))
-      }
-    });
+    res.status(201).json({ success: true, message: "Task created successfully", task });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
@@ -150,99 +94,110 @@ export const getMentorTasks = async (req, res) => {
 
 export const getStudentTasks = async (req, res) => {
   try {
-    const studentId = req.user.id;
-    const { status, priority, internshipId, page = 1, limit = 10 } = req.query;
+    const studentId = req.params.studentId || req.user.id;
+    const { status, internshipId } = req.query;
 
-    const query = { student: studentId };
-    
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
-    if (internshipId) query.internship = internshipId;
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-
-    let tasks = await InternshipTask.find(query)
-      .populate("mentor", "name email avatar")
-      .populate("internship", "title company")
-      .sort({ dueDate: 1 })
-      .skip(skip)
-      .limit(parseInt(limit));
-      
-    await updateOverdueStatus(tasks);
-
-    const total = await InternshipTask.countDocuments(query);
-    
-    // Overall progress calc
-    const allTasks = await InternshipTask.find({ student: studentId, internship: internshipId || { $exists: true } });
-    let overallProgress = 0;
-    if (allTasks.length > 0) {
-      const sum = allTasks.reduce((acc, t) => acc + (t.progress || 0), 0);
-      overallProgress = Math.round(sum / allTasks.length);
+    if (req.user.role === "student" && req.user.id !== studentId) {
+      return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    res.json({
-      success: true,
-      tasks,
-      overallProgress,
-      totalTasks: allTasks.length,
-      completedTasks: allTasks.filter(t => t.status === "completed").length,
-      inProgressTasks: allTasks.filter(t => t.status === "in_progress").length,
-      submittedTasks: allTasks.filter(t => t.status === "submitted").length,
-      overdueTasks: allTasks.filter(t => t.status === "overdue").length,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        totalPages: Math.ceil(total / parseInt(limit))
-      }
-    });
+    const query = { student: studentId };
+    if (status) query.status = status;
+    if (internshipId) query.internship = internshipId;
+
+    let tasks = await InternshipTask.find(query)
+      .populate("internship", "title company")
+      .populate("mentor", "name email")
+      .sort({ dueDate: 1 });
+
+    await updateOverdueStatus(tasks);
+
+    tasks = await InternshipTask.find(query)
+      .populate("internship", "title company")
+      .populate("mentor", "name email")
+      .sort({ dueDate: 1 });
+
+    res.json({ success: true, tasks });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-export const getTasksByIntern = async (req, res) => {
+export const getTasksByIntern = getStudentTasks;
+
+export const getMentorTasks = async (req, res) => {
   try {
-    const { studentId } = req.params;
+    const { status, internshipId, studentId } = req.query;
     
-    // Check authorization
+    const query = {};
     if (req.user.role === "mentor") {
-      const assignment = await MentorAssignment.findOne({ mentor: req.user.id, student: studentId, status: "active" });
+      query.mentor = req.user.id;
+    }
+    
+    if (status) query.status = status;
+    if (internshipId) query.internship = internshipId;
+    if (studentId) query.student = studentId;
+
+    let tasks = await InternshipTask.find(query)
+      .populate("student", "name email")
+      .populate("internship", "title company")
+      .sort({ createdAt: -1 });
+
+    await updateOverdueStatus(tasks);
+
+    tasks = await InternshipTask.find(query)
+      .populate("student", "name email")
+      .populate("internship", "title company")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, tasks });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getInternshipTasks = async (req, res) => {
+  try {
+    const { internshipId } = req.params;
+    const { status, studentId } = req.query;
+
+    const internship = await Internship.findById(internshipId);
+    if (!internship) return res.status(404).json({ success: false, message: "Internship not found" });
+
+    if (req.user.role === "mentor") {
+      const assignment = await MentorAssignment.findOne({
+        internship: internshipId,
+        mentor: req.user.id,
+        status: "active"
+      });
       if (!assignment) {
-        return res.status(403).json({ success: false, message: "You are not assigned as mentor for this intern" });
+        return res.status(403).json({ success: false, message: "Not authorized to view tasks for this internship" });
+      }
+    } else if (req.user.role === "student") {
+      if (req.user.id !== studentId) {
+        return res.status(403).json({ success: false, message: "Not authorized" });
       }
     } else if (req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    const student = await User.findById(studentId).select("name email avatar");
-    
-    let tasks = await InternshipTask.find({ student: studentId })
-      .populate("mentor", "name email")
-      .populate("internship", "title company")
-      .sort({ createdAt: -1 });
-      
-    await updateOverdueStatus(tasks);
-    
-    let overallProgress = 0;
-    if (tasks.length > 0) {
-      const sum = tasks.reduce((acc, t) => acc + (t.progress || 0), 0);
-      overallProgress = Math.round(sum / tasks.length);
-    }
+    const query = { internship: internshipId };
+    if (status) query.status = status;
+    if (studentId) query.student = studentId;
 
-    res.json({
-      success: true,
-      student,
-      tasks,
-      statistics: {
-        overallProgress,
-        totalTasks: tasks.length,
-        completedTasks: tasks.filter(t => t.status === "completed").length,
-        inProgressTasks: tasks.filter(t => t.status === "in_progress").length,
-        submittedTasks: tasks.filter(t => t.status === "submitted").length,
-        overdueTasks: tasks.filter(t => t.status === "overdue").length,
-      }
-    });
+    let tasks = await InternshipTask.find(query)
+      .populate("student", "name email")
+      .populate("mentor", "name email")
+      .sort({ dueDate: 1 });
+
+    await updateOverdueStatus(tasks);
+
+    tasks = await InternshipTask.find(query)
+      .populate("student", "name email")
+      .populate("mentor", "name email")
+      .sort({ dueDate: 1 });
+
+    res.json({ success: true, tasks });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
@@ -250,22 +205,19 @@ export const getTasksByIntern = async (req, res) => {
 
 export const getTaskById = async (req, res) => {
   try {
-    let task = await InternshipTask.findById(req.params.id)
-      .populate("student", "name email avatar")
-      .populate("mentor", "name email avatar")
-      .populate("internship", "title company startDate endDate");
+    const task = await InternshipTask.findById(req.params.id)
+      .populate("student", "name email")
+      .populate("mentor", "name email")
+      .populate("internship", "title company");
 
     if (!task) return res.status(404).json({ success: false, message: "Task not found." });
 
-    await updateOverdueStatus([task]);
-
-    // Check authorization
     if (req.user.role === "student" && task.student._id.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: "You are not authorized to access this task." });
+       return res.status(403).json({ success: false, message: "You are not authorized to view this task." });
     }
-    
+
     if (req.user.role === "mentor" && task.mentor._id.toString() !== req.user.id) {
-      return res.status(403).json({ success: false, message: "You are not authorized to access this task." });
+       return res.status(403).json({ success: false, message: "You are not authorized to view this task." });
     }
     
     if (!["student", "mentor", "admin"].includes(req.user.role)) {
@@ -381,9 +333,7 @@ export const submitTask = async (req, res) => {
     if (submissionNote !== undefined) task.submissionNote = submissionNote;
     task.status = "submitted";
     task.submittedAt = new Date();
-    
-    // progress can optionally be updated here, we keep it as is, or mentor can review
-    
+
     await task.save();
     res.json({ success: true, message: "Task submitted successfully.", task });
   } catch (error) {
@@ -425,6 +375,13 @@ export const reviewTask = async (req, res) => {
     }
 
     await task.save();
+
+    const fullTask = await InternshipTask.findById(task._id).populate('internship student');
+    if (fullTask && fullTask.student) {
+      const reviewerUser = await User.findById(req.user.id || req.user._id);
+      notifyTaskEvaluation(fullTask, fullTask.internship, fullTask.student, reviewerUser || req.user).catch(console.error);
+    }
+
     res.json({ success: true, message: "Task reviewed successfully.", task });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });

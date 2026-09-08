@@ -62,6 +62,7 @@ import StudentFeedback from './pages/student/StudentFeedback';
 import MentorFeedback from './pages/mentor/MentorFeedback';
 import CompanyFeedback from './pages/company/CompanyFeedback';
 import AdminFeedback from './pages/admin/AdminFeedback';
+import AdminReports from './pages/admin/Reports';
 import CompanyProfilePage from './pages/CompanyProfilePage';
 import TwoFactorLoginPage from './pages/TwoFactorLoginPage';
 import StudentCertificates from './pages/student/StudentCertificates';
@@ -603,6 +604,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminFeedback darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminReports darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />

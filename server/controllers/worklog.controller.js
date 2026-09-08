@@ -1,6 +1,9 @@
 import WorkLog from "../models/WorkLog.js";
 import Application from "../models/Application.js";
 import InternshipTask from "../models/InternshipTask.js";
+import Internship from "../models/Internship.js";
+import User from "../models/User.js";
+import { notifyWorkLogStatus } from "../services/notification.service.js";
 import { validateMentorStudentAssignment } from "../utils/assignmentHelper.js";
 
 const startOfDay = (dateString) => {
@@ -362,6 +365,15 @@ export const reviewWorkLog = async (req, res) => {
     workLog.reviewedAt = new Date();
 
     await workLog.save();
+
+    const [studentUser, internshipObj, reviewerUser] = await Promise.all([
+      User.findById(workLog.studentId),
+      Internship.findById(workLog.internshipId),
+      User.findById(userId)
+    ]);
+    if (studentUser) {
+      notifyWorkLogStatus(workLog, internshipObj, studentUser, reviewerUser).catch(console.error);
+    }
 
     res.json({ success: true, message: "Work log reviewed successfully.", workLog });
   } catch (error) {
