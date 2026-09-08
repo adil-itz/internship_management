@@ -49,6 +49,8 @@ import attendanceRoutes from "./server/routes/attendance.routes.js";
 import worklogRoutes from "./server/routes/worklog.routes.js";
 import feedbackRoutes from "./server/routes/feedback.routes.js";
 import certificateRoutes from "./server/routes/certificate.routes.js";
+import reportRoutes from "./server/routes/report.routes.js";
+import notificationRoutes from "./server/routes/notification.routes.js";
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -64,6 +66,8 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/worklogs", worklogRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/certificates", certificateRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));

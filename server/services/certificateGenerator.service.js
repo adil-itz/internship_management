@@ -24,15 +24,13 @@ export const generateCertificatePDF = async (data) => {
       bgImageSrc = `data:image/png;base64,${bgImageBase64}`;
     }
 
-    // Generate QR Code
+  
     const verificationUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/verify-certificate/${data.certificateId}`;
-    const qrCodeBase64 = await generateQRCode(verificationUrl);
+    const qrCodeBase64 = await generateQRCode(verificationUrl)
 
-    // Format dates
     const startDate = data.startDate ? new Date(data.startDate).toLocaleDateString() : 'N/A';
     const endDate = data.endDate ? new Date(data.endDate).toLocaleDateString() : 'N/A';
 
-    // Replace placeholders
     const replacements = {
       '{{certificateId}}': data.certificateId,
       '{{studentName}}': data.studentName,

@@ -68,6 +68,15 @@ export const createInternship = async (req, res) => {
     });
 
     const createdInternship = await internship.save();
+
+    // Fetch company info for the notification
+    const company = await User.findById(req.user.id);
+    if (company && createdInternship.status === 'published') {
+      import('../services/notification.service.js').then(({ notifyNewInternship }) => {
+        notifyNewInternship(createdInternship, company).catch(console.error);
+      });
+    }
+
     res.status(201).json({ success: true, internship: createdInternship });
   } catch (error) {
     res.status(500).json({ message: error.message || "Server error" });

@@ -203,6 +203,16 @@ export const updateApplicationStatus = async (req, res) => {
 
     await application.save();
 
+    const fullApp = await Application.findById(application._id).populate('candidate internship');
+    if (fullApp) {
+      const company = await import('../models/User.js').then(m => m.default.findById(fullApp.internship.company));
+      if (company) {
+        import('../services/notification.service.js').then(({ notifyApplicationStatus }) => {
+          notifyApplicationStatus(fullApp, fullApp.internship, fullApp.candidate, company, currentStatus).catch(console.error);
+        });
+      }
+    }
+
     res.json({
       success: true,
       message: "Application status updated",
@@ -243,6 +253,16 @@ export const scheduleInterview = async (req, res) => {
     application.status = "interview_scheduled";
 
     await application.save();
+
+    const fullApp = await Application.findById(application._id).populate('candidate internship');
+    if (fullApp) {
+      const company = await import('../models/User.js').then(m => m.default.findById(fullApp.internship.company));
+      if (company) {
+        import('../services/notification.service.js').then(({ notifyInterviewScheduled }) => {
+          notifyInterviewScheduled(fullApp, fullApp.internship, fullApp.candidate, company).catch(console.error);
+        });
+      }
+    }
 
     res.json({ success: true, message: "Interview scheduled", application });
   } catch (error) {
