@@ -13,12 +13,10 @@ export const generateCertificate = async (req, res) => {
     const { internshipId } = req.params;
     const studentId = req.user.id;
 
-    // Verify role
     if (req.user.role !== 'student') {
       return res.status(403).json({ message: 'Only students can generate certificates' });
     }
 
-    // Check if certificate already exists
     let existingCert = await Certificate.findOne({ studentId, internshipId });
     if (existingCert) {
       return res.status(200).json({
@@ -28,7 +26,6 @@ export const generateCertificate = async (req, res) => {
       });
     }
 
-    // Verify internship completion
     const assignment = await MentorAssignment.findOne({
       internship: internshipId,
       student: studentId

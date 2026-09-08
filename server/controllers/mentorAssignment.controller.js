@@ -40,6 +40,13 @@ export const assignMentor = async (req, res) => {
 
     await assignment.save();
 
+    const company = await User.findById(internship.company);
+    if (company) {
+      import('../services/notification.service.js').then(({ notifyMentorAssigned }) => {
+        notifyMentorAssigned(assignment, internship, student, company, mentor).catch(console.error);
+      });
+    }
+
     res.status(201).json({ success: true, message: "Mentor assigned successfully", assignment });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });

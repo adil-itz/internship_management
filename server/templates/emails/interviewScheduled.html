@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+  .header { font-size: 24px; font-weight: bold; color: #2563eb; margin-bottom: 20px; text-align: center; }
+  .content { font-size: 16px; margin-bottom: 20px; }
+  .details { background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+  .footer { margin-top: 30px; font-size: 14px; color: #777; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">InterFlow</div>
+    <div class="content">
+      <p>Hello {{studentName}},</p>
+      <p>An interview has been scheduled for your internship application.</p>
+      <div class="details">
+        <strong>Internship:</strong> {{internshipTitle}}<br/>
+        <strong>Company:</strong> {{companyName}}<br/><br/>
+        <strong>Date:</strong> {{date}}<br/>
+        <strong>Time:</strong> {{time}}<br/>
+        <strong>Mode:</strong> {{mode}}<br/>
+        {{#if meetingLink}}<strong>Link:</strong> <a href="{{meetingLink}}">Join Meeting</a><br/>{{/if}}
+        {{#if location}}<strong>Location:</strong> {{location}}<br/>{{/if}}
+      </div>
+      <p>Please prepare accordingly and be on time. Good luck!</p>
+    </div>
+    <div class="footer">
+      &copy; {{year}} InterFlow. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
