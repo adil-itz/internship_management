@@ -51,6 +51,7 @@ import feedbackRoutes from "./server/routes/feedback.routes.js";
 import certificateRoutes from "./server/routes/certificate.routes.js";
 import reportRoutes from "./server/routes/report.routes.js";
 import notificationRoutes from "./server/routes/notification.routes.js";
+import chatbotRoutes from "./server/routes/chatbot.routes.js";
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -68,6 +69,7 @@ app.use("/api/feedback", feedbackRoutes);
 app.use("/api/certificates", certificateRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));
