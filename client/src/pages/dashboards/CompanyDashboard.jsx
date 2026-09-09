@@ -27,28 +27,40 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import { getCompanyInternships } from '../../services/internship.service';
+import { getCompanyApplications, updateApplicationStatus } from '../../services/application.service';
 
 export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('postings');
   const [realPostings, setRealPostings] = useState([]);
   const [loadingRealPostings, setLoadingRealPostings] = useState(false);
+  const [realApplications, setRealApplications] = useState([]);
+  const [loadingRealApplications, setLoadingRealApplications] = useState(false);
+
+  const fetchRealData = async () => {
+    setLoadingRealPostings(true);
+    setLoadingRealApplications(true);
+    try {
+      const [postingsRes, appsRes] = await Promise.allSettled([
+        getCompanyInternships(),
+        getCompanyApplications()
+      ]);
+      if (postingsRes.status === 'fulfilled' && postingsRes.value?.success) {
+        setRealPostings(postingsRes.value.internships || []);
+      }
+      if (appsRes.status === 'fulfilled' && appsRes.value?.success) {
+        setRealApplications(appsRes.value.applications || []);
+      }
+    } catch (err) {
+      console.error('Failed to load company dashboard data:', err);
+    } finally {
+      setLoadingRealPostings(false);
+      setLoadingRealApplications(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchRealPostings = async () => {
-      setLoadingRealPostings(true);
-      try {
-        const res = await getCompanyInternships();
-        if (res && res.success) {
-          setRealPostings(res.internships || []);
-        }
-      } catch (err) {
-        console.error('Failed to load company postings for dashboard:', err);
-      } finally {
-        setLoadingRealPostings(false);
-      }
-    };
-    fetchRealPostings();
+    fetchRealData();
   }, []);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -151,7 +163,23 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
     setShowCreateModal(false);
   };
 
-  const handleUpdateApplicantStatus = (id, newStatus) => {
+  const handleUpdateApplicantStatus = async (id, newStatus) => {
+    try {
+      const dbStatusMap = {
+        'Pending': 'applied',
+        'Shortlisted': 'shortlisted',
+        'Interviewed': 'interview_scheduled',
+        'Selected': 'selected',
+        'Rejected': 'rejected'
+      };
+      const apiStatus = dbStatusMap[newStatus] || newStatus.toLowerCase();
+      const res = await updateApplicationStatus(id, { status: apiStatus });
+      if (res && res.success) {
+        setRealApplications(realApplications.map((a) => (a._id === id ? { ...a, status: apiStatus } : a)));
+      }
+    } catch (err) {
+      console.error('Failed to update application status:', err);
+    }
     setApplicants(
       applicants.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
     );
@@ -219,10 +247,12 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">105</span>
-              <span className="text-xs font-bold text-blue-500">+18 today</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realApplications.length > 0 ? realApplications.length : 105}
+              </span>
+              <span className="text-xs font-bold text-blue-500">Live Queue</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Across {postings.length} internship listings</p>
+            <p className="text-[11px] text-slate-400 mt-1">Across {realPostings.length || postings.length} internship listings</p>
           </div>
 
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-amber-500/50 transition-all group">
@@ -233,8 +263,10 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">12</span>
-              <span className="text-xs font-bold text-amber-500">Unread</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realApplications.length > 0 ? realApplications.filter(a => a.status === 'applied' || a.status === 'shortlisted').length : 12}
+              </span>
+              <span className="text-xs font-bold text-amber-500">Action Needed</span>
             </div>
             <p className="text-[11px] text-slate-400 mt-1">Requires recruiter action</p>
           </div>
@@ -247,8 +279,10 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">4</span>
-              <span className="text-xs font-bold text-emerald-500">80% Acceptance</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realApplications.length > 0 ? realApplications.filter(a => a.status === 'selected').length : 4}
+              </span>
+              <span className="text-xs font-bold text-emerald-500">Accepted</span>
             </div>
             <p className="text-[11px] text-slate-400 mt-1">Top tier intern conversion</p>
           </div>
@@ -399,78 +433,86 @@ export default function CompanyDashboard({ darkMode, setDarkMode, user }) {
           </div>
         )}
 
-        {/* Tab 2: Applicants Queue */}
         {activeTab === 'applicants' && (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {applicants.map((a) => (
-                <div
-                  key={a.id}
-                  className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xl transition-all flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-extrabold text-base text-slate-900 dark:text-white">{a.candidateName}</h4>
-                        <p className="text-[11px] font-semibold text-slate-400">{a.email}</p>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                        {a.status}
-                      </span>
-                    </div>
+              {(realApplications.length > 0 ? realApplications : applicants).map((a) => {
+                const isReal = Boolean(a._id);
+                const candidateName = isReal ? (a.candidate?.name || 'Applicant') : a.candidateName;
+                const email = isReal ? (a.candidate?.email || 'N/A') : a.email;
+                const roleApplied = isReal ? (a.internship?.title || 'Internship') : a.roleApplied;
+                const statusLabel = a.status || 'applied';
+                const appId = isReal ? a._id : a.id;
 
-                    <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
-                      <p className="font-semibold text-slate-600 dark:text-slate-400">
-                        Applied for: <span className="text-slate-900 dark:text-white font-extrabold">{a.roleApplied}</span>
-                      </p>
-                      <p className="text-slate-500">
-                        GPA: <span className="font-extrabold text-slate-800 dark:text-slate-200">{a.gpa}</span> ({a.university})
-                      </p>
-                      <p className="text-slate-500">
-                        Highlights: <span className="text-slate-800 dark:text-slate-200 font-medium">{a.experience}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {a.skills.map((s) => (
-                        <span key={s} className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                          {s}
+                return (
+                  <div
+                    key={appId}
+                    className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:shadow-xl transition-all flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-extrabold text-base text-slate-900 dark:text-white">{candidateName}</h4>
+                          <p className="text-[11px] font-semibold text-slate-400">{email}</p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                          {statusLabel}
                         </span>
-                      ))}
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 text-xs space-y-1.5">
+                        <p className="font-semibold text-slate-600 dark:text-slate-400">
+                          Applied for: <span className="text-slate-900 dark:text-white font-extrabold">{roleApplied}</span>
+                        </p>
+                        <p className="text-slate-500">
+                          Applied On: <span className="font-extrabold text-slate-800 dark:text-slate-200">{a.appliedAt ? new Date(a.appliedAt).toISOString().split('T')[0] : (a.appliedDate || 'Recent')}</span>
+                        </p>
+                      </div>
+
+                      {a.resumeUrl && (
+                        <a
+                          href={a.resumeUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <FileText size={14} /> View Candidate Resume
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        onClick={() => handleUpdateApplicantStatus(appId, 'Shortlisted')}
+                        className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                          statusLabel === 'shortlisted' || statusLabel === 'Shortlisted'
+                            ? 'bg-emerald-600 text-white shadow-sm'
+                            : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100'
+                        }`}
+                      >
+                        <Check size={14} /> Shortlist
+                      </button>
+                      <button
+                        onClick={() => handleUpdateApplicantStatus(appId, 'Interviewed')}
+                        className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                          statusLabel === 'interview_scheduled' || statusLabel === 'Interviewed'
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100'
+                        }`}
+                      >
+                        Interview
+                      </button>
+                      <button
+                        onClick={() => handleUpdateApplicantStatus(appId, 'Rejected')}
+                        className="py-2 px-3 text-xs font-extrabold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
+                        title="Reject Candidate"
+                      >
+                        <XCircle size={15} />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <button
-                      onClick={() => handleUpdateApplicantStatus(a.id, 'Shortlisted')}
-                      className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                        a.status === 'Shortlisted'
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100'
-                      }`}
-                    >
-                      <Check size={14} /> Shortlist
-                    </button>
-                    <button
-                      onClick={() => handleUpdateApplicantStatus(a.id, 'Interviewed')}
-                      className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                        a.status === 'Interviewed'
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100'
-                      }`}
-                    >
-                      Interview
-                    </button>
-                    <button
-                      onClick={() => handleUpdateApplicantStatus(a.id, 'Rejected')}
-                      className="py-2 px-3 text-xs font-extrabold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
-                      title="Reject Candidate"
-                    >
-                      <XCircle size={15} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

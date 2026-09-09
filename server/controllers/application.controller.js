@@ -332,3 +332,18 @@ export const withdrawApplication = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+export const getCompanyApplications = async (req, res) => {
+  try {
+    const companyInternships = await Internship.find({ company: req.user.id }).select('_id');
+    const internshipIds = companyInternships.map((i) => i._id);
+    const applications = await Application.find({ internship: { $in: internshipIds } })
+      .populate('candidate', 'name email avatar')
+      .populate('internship', 'title department location stipend status')
+      .sort({ appliedAt: -1 });
+    res.json({ success: true, applications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+};
+

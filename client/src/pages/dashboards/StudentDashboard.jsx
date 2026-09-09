@@ -29,6 +29,7 @@ import InternshipCard from '../../components/internship/InternshipCard';
 import ApplyComingSoonModal from '../../components/internship/ApplyComingSoonModal';
 import { getInternships } from '../../services/internship.service';
 import { getWorkLogSummary } from '../../services/worklog.service';
+import { getMyApplications, createApplication } from '../../services/application.service';
 
 export default function StudentDashboard({ darkMode, setDarkMode, user }) {
   const [activeTab, setActiveTab] = useState('applications');
@@ -37,6 +38,8 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
 
   const [realInternships, setRealInternships] = useState([]);
   const [loadingInternships, setLoadingInternships] = useState(false);
+  const [realStudentApps, setRealStudentApps] = useState([]);
+  const [loadingRealApps, setLoadingRealApps] = useState(false);
   const [comingSoonModalOpen, setComingSoonModalOpen] = useState(false);
   const [selectedTitle, setSelectedTitle] = useState('');
   const [workLogSummary, setWorkLogSummary] = useState({
@@ -48,21 +51,30 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
     totalHours: 0
   });
 
-  useEffect(() => {
-    const loadRealInternships = async () => {
-      setLoadingInternships(true);
-      try {
-        const res = await getInternships();
-        if (res && res.success) {
-          setRealInternships(res.internships || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch internships for student dashboard:', err);
-      } finally {
-        setLoadingInternships(false);
+  const fetchStudentData = async () => {
+    setLoadingInternships(true);
+    setLoadingRealApps(true);
+    try {
+      const [internRes, appsRes] = await Promise.allSettled([
+        getInternships(),
+        getMyApplications()
+      ]);
+      if (internRes.status === 'fulfilled' && internRes.value?.success) {
+        setRealInternships(internRes.value.internships || []);
       }
-    };
-    loadRealInternships();
+      if (appsRes.status === 'fulfilled' && appsRes.value?.success) {
+        setRealStudentApps(appsRes.value.applications || []);
+      }
+    } catch (err) {
+      console.error('Failed to load student dashboard data:', err);
+    } finally {
+      setLoadingInternships(false);
+      setLoadingRealApps(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudentData();
   }, []);
 
   const sessionUserStr = sessionStorage.getItem('user') || localStorage.getItem('user');
@@ -213,30 +225,63 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
     },
   ];
 
-  const handleApplyToJob = (e) => {
+  const handleApplyToJob = async (e) => {
     e.preventDefault();
     if (!selectedJobToApply) return;
+
+    if (selectedJobToApply._id) {
+      try {
+        const res = await createApplication({
+          internshipId: selectedJobToApply._id,
+          coverLetter: coverLetter
+        });
+        if (res && res.success) {
+          setRealStudentApps([res.application, ...realStudentApps]);
+        }
+      } catch (err) {
+        console.error('Failed to create application:', err);
+      }
+    }
 
     const newApp = {
       id: Date.now(),
       role: selectedJobToApply.title,
-      company: selectedJobToApply.company,
-      location: selectedJobToApply.type,
+      company: selectedJobToApply.company?.name || selectedJobToApply.company || 'Company',
+      location: selectedJobToApply.location || selectedJobToApply.type || 'Remote',
       appliedDate: new Date().toISOString().split('T')[0],
       status: 'Under Review',
       statusColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-      stipend: selectedJobToApply.stipend,
+      stipend: selectedJobToApply.stipend || '$1,500 / mo',
       notes: coverLetter ? `Cover Letter Submitted: "${coverLetter.slice(0, 60)}..."` : 'Application submitted successfully.',
       recruiter: 'Recruitment Team',
     };
 
     setApplications([newApp, ...applications]);
-    setAppliedJobIds([...appliedJobIds, selectedJobToApply.id]);
+    setAppliedJobIds([...appliedJobIds, selectedJobToApply._id || selectedJobToApply.id]);
     setSelectedJobToApply(null);
     setCoverLetter('');
   };
 
-  const filteredApplications = applications.filter((app) => {
+  const displayAppsList = realStudentApps.length > 0
+    ? realStudentApps.map((a) => ({
+        id: a._id,
+        role: a.internship?.title || 'Internship Role',
+        company: a.internship?.company?.name || a.internship?.company || 'Partner Company',
+        location: a.internship?.location || 'Remote',
+        appliedDate: a.appliedAt ? new Date(a.appliedAt).toISOString().split('T')[0] : 'Recent',
+        status: a.status === 'applied' ? 'Under Review' : a.status === 'shortlisted' ? 'Shortlisted' : a.status === 'interview_scheduled' ? 'Interview Scheduled' : a.status === 'selected' ? 'Offer Extended' : a.status,
+        statusColor: a.status === 'selected'
+          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+          : a.status === 'rejected'
+          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+          : 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+        stipend: a.internship?.stipend || '$1,500 / mo',
+        notes: a.coverLetter ? `Cover letter attached` : 'Application active in database.',
+        recruiter: 'Recruitment Team'
+      }))
+    : applications;
+
+  const filteredApplications = displayAppsList.filter((app) => {
     const matchesFilter =
       filterStatus === 'all' || app.status.toLowerCase().includes(filterStatus.toLowerCase());
     const matchesSearch =
@@ -294,12 +339,14 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{applications.length}</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realStudentApps.length > 0 ? realStudentApps.length : applications.length}
+              </span>
               <span className="text-xs font-extrabold text-emerald-500 flex items-center gap-0.5">
-                <TrendingUp size={13} /> +2 this week
+                <TrendingUp size={13} /> Active
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">2 actively under review</p>
+            <p className="text-[11px] text-slate-400 mt-1">Real-time status tracking</p>
           </div>
 
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-cyan-500/50 transition-all group">
@@ -328,12 +375,14 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">1</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realStudentApps.length > 0 ? realStudentApps.filter(a => a.status === 'interview_scheduled' || a.interview).length : 1}
+              </span>
               <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
-                Tomorrow
+                Scheduled
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">TechCorp Solutions • 4:00 PM</p>
+            <p className="text-[11px] text-slate-400 mt-1">Direct interview updates</p>
           </div>
 
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-purple-500/50 transition-all group">
@@ -347,7 +396,7 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               <span className="text-3xl font-black text-slate-900 dark:text-white">2</span>
               <span className="text-xs font-bold text-purple-500">Calls Booked</span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">Next: Sarah Jenkins (Google)</p>
+            <p className="text-[11px] text-slate-400 mt-1">1-on-1 mentorship session</p>
           </div>
 
           <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-emerald-500/50 transition-all group">
@@ -358,12 +407,14 @@ export default function StudentDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">1</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {realStudentApps.length > 0 ? realStudentApps.filter(a => a.status === 'selected').length : 1}
+              </span>
               <span className="text-xs font-extrabold text-emerald-500 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                 Received 🎉
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-1">CreativePulse Studios</p>
+            <p className="text-[11px] text-slate-400 mt-1">Selected positions</p>
           </div>
         </div>
 

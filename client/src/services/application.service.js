@@ -178,3 +178,22 @@ export const withdrawApplication = async (id) => {
 
   return response.json();
 };
+
+export const getCompanyApplications = async () => {
+  const response = await fetch('/api/applications/company/all', {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    let errMsg = 'Failed to fetch company applications';
+    try {
+      const errData = await response.json();
+      if (errData.message) errMsg = errData.message;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+
+  return response.json();
+};
+

@@ -13,7 +13,9 @@ import {
   verify2FALogin,
   verifyBackupCode,
   disable2FA,
-  get2FAStatus
+  get2FAStatus,
+  getAllUsers,
+  updateUserRole
 } from "../controllers/auth.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 
@@ -28,7 +30,9 @@ router.post("/verify-otp", verifyOtp);
 router.post("/reset-password", resetPassword);
 router.post("/reset-password/:token", resetPassword);
 
-// 2FA Routes
+router.get("/users", protect, getAllUsers);
+router.patch("/users/:id/role", protect, updateUserRole);
+
 router.post("/2fa/setup", protect, setup2FA);
 router.post("/2fa/verify-setup", protect, verify2FASetup);
 router.post("/2fa/verify-login", verify2FALogin);
