@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserCheck,
   Calendar,
@@ -19,6 +19,8 @@ import {
   Check,
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
+import { getMyAssignments } from '../../services/mentorAssignment.service';
+import { getWorkLogs, reviewWorkLog } from '../../services/worklog.service';
 
 export default function MentorDashboard({ darkMode, setDarkMode, user }) {
   const [activeTab, setActiveTab] = useState('sessions');
@@ -26,6 +28,29 @@ export default function MentorDashboard({ darkMode, setDarkMode, user }) {
   const [selectedMenteeToEvaluate, setSelectedMenteeToEvaluate] = useState(null);
   const [evaluationFeedback, setEvaluationFeedback] = useState('');
   const [evaluatedMenteeIds, setEvaluatedMenteeIds] = useState([]);
+  const [realMentees, setRealMentees] = useState([]);
+  const [realWorkLogs, setRealWorkLogs] = useState([]);
+
+  const fetchMentorData = async () => {
+    try {
+      const [assignmentsRes, logsRes] = await Promise.allSettled([
+        getMyAssignments(),
+        getWorkLogs()
+      ]);
+      if (assignmentsRes.status === 'fulfilled' && assignmentsRes.value?.success) {
+        setRealMentees(assignmentsRes.value.assignments || assignmentsRes.value.data || []);
+      }
+      if (logsRes.status === 'fulfilled' && logsRes.value?.success) {
+        setRealWorkLogs(logsRes.value.workLogs || logsRes.value.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load mentor dashboard data:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchMentorData();
+  }, []);
 
   const sessions = [
     {
@@ -79,11 +104,18 @@ export default function MentorDashboard({ darkMode, setDarkMode, user }) {
     },
   ]);
 
-  const handleEvaluateLog = (e) => {
+  const handleEvaluateLog = async (e) => {
     e.preventDefault();
     if (!selectedMenteeToEvaluate) return;
-
-    setEvaluatedMenteeIds([...evaluatedMenteeIds, selectedMenteeToEvaluate.id]);
+    const targetId = selectedMenteeToEvaluate._id || selectedMenteeToEvaluate.id;
+    try {
+      if (selectedMenteeToEvaluate._id) {
+        await reviewWorkLog(selectedMenteeToEvaluate._id, { status: 'approved', feedback: evaluationFeedback });
+      }
+    } catch (err) {
+      console.error('Failed to submit evaluation:', err);
+    }
+    setEvaluatedMenteeIds([...evaluatedMenteeIds, targetId]);
     setSelectedMenteeToEvaluate(null);
     setEvaluationFeedback('');
   };
@@ -134,7 +166,7 @@ export default function MentorDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{mentees.length + 6}</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{realMentees.length > 0 ? realMentees.length : (mentees.length + 6)}</span>
               <span className="text-xs font-bold text-blue-500">Active Students</span>
             </div>
             <p className="text-[11px] text-slate-400 mt-1">From top university cohorts</p>

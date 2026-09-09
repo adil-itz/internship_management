@@ -47,6 +47,8 @@ export const getStudentWorkLogs = async (studentId, params = {}) => {
   return response.json();
 };
 
+export const getWorkLogs = getStudentWorkLogs;
+
 export const getInternshipWorkLogs = async (internshipId, params = {}) => {
   const query = new URLSearchParams(params).toString();
   const url = `/api/worklogs/internship/${internshipId}${query ? `?${query}` : ''}`;

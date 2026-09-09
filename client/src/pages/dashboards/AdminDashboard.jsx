@@ -37,6 +37,8 @@ import {
   updateInternship,
   deleteInternship,
 } from '../../services/internship.service';
+import { getAllUsersAdmin, updateUserRoleAdmin } from '../../services/auth.service';
+import { getDashboardReports } from '../../services/report.service';
 
 export default function AdminDashboard({ darkMode, setDarkMode, user }) {
   const [activeTab, setActiveTab] = useState('users');
@@ -44,50 +46,9 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserToEdit, setSelectedUserToEdit] = useState(null);
   const [newRoleForUser, setNewRoleForUser] = useState('student');
-
-  // Sample Users Database Data
-  const [usersList, setUsersList] = useState([
-    {
-      id: 1,
-      name: 'John Candidate',
-      email: 'john@student.edu',
-      role: 'student',
-      status: 'Active',
-      joined: '2026-08-01',
-    },
-    {
-      id: 2,
-      name: 'TechCorp Recruiter',
-      email: 'hr@techcorp.com',
-      role: 'company',
-      status: 'Verified',
-      joined: '2026-07-15',
-    },
-    {
-      id: 3,
-      name: 'Sarah Jenkins',
-      email: 'sarah@mentors.io',
-      role: 'mentor',
-      status: 'Verified',
-      joined: '2026-06-20',
-    },
-    {
-      id: 4,
-      name: 'System SuperAdmin',
-      email: 'admin@internflow.com',
-      role: 'admin',
-      status: 'Active',
-      joined: '2026-01-01',
-    },
-    {
-      id: 5,
-      name: 'Pending StartUp Inc',
-      email: 'founders@startup.co',
-      role: 'company',
-      status: 'Pending Verification',
-      joined: '2026-08-23',
-    },
-  ]);
+  const [usersList, setUsersList] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   const [verifications, setVerifications] = useState([
     {
@@ -107,6 +68,53 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
       status: 'Pending',
     },
   ]);
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await getAllUsersAdmin({ role: roleFilter, search: searchQuery });
+      if (res && res.success) {
+        setUsersList(res.users || []);
+      }
+    } catch (err) {
+      console.error('Failed to load users for admin:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const fetchSummary = async () => {
+    try {
+      const res = await getDashboardReports();
+      if (res && res.success) {
+        setSummaryData(res.summary);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard report summary:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchSummary();
+    fetchAdminInternships();
+  }, [roleFilter, searchQuery]);
+
+  const handleSaveUserRole = async (e) => {
+    e.preventDefault();
+    if (!selectedUserToEdit) return;
+    try {
+      const res = await updateUserRoleAdmin(selectedUserToEdit._id || selectedUserToEdit.id, newRoleForUser);
+      if (res && res.success) {
+        setUsersList(usersList.map((u) => ((u._id === selectedUserToEdit._id || u.id === selectedUserToEdit.id) ? { ...u, role: newRoleForUser } : u)));
+        showToast('User role updated successfully.');
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to update user role');
+    } finally {
+      setSelectedUserToEdit(null);
+    }
+  };
 
   // Admin Manage Internships State
   const [internshipsList, setInternshipsList] = useState([]);
@@ -171,16 +179,6 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
     setVerifications(
       verifications.map((v) => (v.id === id ? { ...v, status: 'Rejected' } : v))
     );
-  };
-
-  const handleSaveUserRole = (e) => {
-    e.preventDefault();
-    if (!selectedUserToEdit) return;
-
-    setUsersList(
-      usersList.map((u) => (u.id === selectedUserToEdit.id ? { ...u, role: newRoleForUser } : u))
-    );
-    setSelectedUserToEdit(null);
   };
 
   // Quick Status Toggle for Admin
@@ -319,8 +317,8 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">12,480</span>
-              <span className="text-xs font-bold text-emerald-500">+140 this week</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{summaryData?.totalUsers || usersList.length}</span>
+              <span className="text-xs font-bold text-emerald-500">Live Active</span>
             </div>
             <p className="text-[11px] text-slate-400 mt-1">Students, Companies, Mentors</p>
           </div>
@@ -349,7 +347,7 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
               </div>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">2</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{verifications.length}</span>
               <span className="text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950 px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
                 Pending approval
               </span>
@@ -444,7 +442,7 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
                     {filteredUsers.map((u) => (
-                      <tr key={u.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
+                      <tr key={u._id || u.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-850/40 transition-colors">
                         <td className="py-4 px-5">
                           <div className="font-extrabold text-slate-900 dark:text-white text-sm">{u.name}</div>
                           <div className="text-slate-400 text-[11px] font-semibold">{u.email}</div>
@@ -454,7 +452,7 @@ export default function AdminDashboard({ darkMode, setDarkMode, user }) {
                             {u.role}
                           </span>
                         </td>
-                        <td className="py-4 px-5 text-slate-500 font-medium">{u.joined}</td>
+                        <td className="py-4 px-5 text-slate-500 font-medium">{u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : u.joined || 'Active'}</td>
                         <td className="py-4 px-5">
                           <span
                             className={`px-3 py-1 rounded-full text-[10px] font-black border ${

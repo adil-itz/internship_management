@@ -95,3 +95,43 @@ export const disable2FA = async (password) => {
   }
   return response.json();
 };
+
+export const getAllUsersAdmin = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.role) query.append('role', params.role);
+  if (params.search) query.append('search', params.search);
+  const qStr = query.toString();
+  const response = await fetch(`/api/auth/users${qStr ? `?${qStr}` : ''}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    let errMsg = 'Failed to fetch users directory';
+    try {
+      const errData = await response.json();
+      if (errData.message) errMsg = errData.message;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+  return response.json();
+};
+
+export const updateUserRoleAdmin = async (userId, role) => {
+  const response = await fetch(`/api/auth/users/${userId}/role`, {
+    method: 'PATCH',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ role }),
+  });
+  if (!response.ok) {
+    let errMsg = 'Failed to update user role';
+    try {
+      const errData = await response.json();
+      if (errData.message) errMsg = errData.message;
+    } catch (e) {}
+    throw new Error(errMsg);
+  }
+  return response.json();
+};
