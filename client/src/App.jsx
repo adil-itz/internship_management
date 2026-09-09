@@ -24,6 +24,7 @@ import AdminAttendance from './pages/admin/AdminAttendance';
 import MentorWorkLogs from './pages/mentor/MentorWorkLogs';
 import AdminWorkLogs from './pages/admin/AdminWorkLogs';
 import ChatPage from './pages/ChatPage';
+import FloatingChatbot from './components/FloatingChatbot';
 
 import CompanyInternships from './pages/company/CompanyInternships';
 import CreateInternship from './pages/company/CreateInternship';
@@ -618,6 +619,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <FloatingChatbot />
     </Router>
   );
 }
