@@ -11,8 +11,11 @@ const FloatingChatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const formRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -21,6 +24,51 @@ const FloatingChatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsListening(true);
+      
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        
+        setTimeout(() => {
+           if(formRef.current) {
+               formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+           }
+        }, 800);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => setIsListening(false);
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleListen = (e) => {
+    e.preventDefault();
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      if (recognitionRef.current) {
+        recognitionRef.current.lang = 'en-IN';
+        recognitionRef.current.start();
+      } else {
+        alert('Your browser does not support Voice Search. Please use Chrome.');
+      }
+    }
+  };
 
   const toggleChat = () => setIsOpen(!isOpen);
 
@@ -76,11 +124,13 @@ const FloatingChatbot = () => {
               </svg>
               InterFlow AI
             </div>
-            <button onClick={toggleChat} className="text-white hover:text-gray-200 focus:outline-none">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={toggleChat} className="text-white hover:text-gray-200 focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
@@ -107,14 +157,24 @@ const FloatingChatbot = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={sendMessage} className="p-3 bg-white border-t border-gray-200 flex gap-2">
+          <form ref={formRef} onSubmit={sendMessage} className="p-3 bg-white border-t border-gray-200 flex gap-2 items-center">
+            <button 
+              type="button"
+              onClick={toggleListen}
+              className={`p-2 rounded-full transition-colors flex items-center justify-center ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              title="Voice Search"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+              </svg>
+            </button>
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me about InterFlow..."
+              placeholder={isListening ? 'Listening...' : 'Ask me about InterFlow...'}
               className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-black"
-              disabled={isLoading}
+              disabled={isLoading || isListening}
             />
             <button 
               type="submit" 
