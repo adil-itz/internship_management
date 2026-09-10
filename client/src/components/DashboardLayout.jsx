@@ -126,13 +126,35 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
     if (socket) {
       const handleNewMessage = () => fetchUnread();
       const handleMessagesRead = () => fetchUnread();
+      
+      const handleNewInternship = (data) => {
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('New Internship Alert! 🚀', {
+              body: `${data.companyName} just posted: ${data.title} (${data.location})`,
+            });
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                new Notification('New Internship Alert! 🚀', {
+                  body: `${data.companyName} just posted: ${data.title} (${data.location})`,
+                });
+              }
+            });
+          }
+        }
+      };
+
       socket.on('newMessage', handleNewMessage);
       socket.on('newMessageNotification', handleNewMessage);
       socket.on('messagesRead', handleMessagesRead);
+      socket.on('new_internship', handleNewInternship);
+
       return () => {
         socket.off('newMessage', handleNewMessage);
         socket.off('newMessageNotification', handleNewMessage);
         socket.off('messagesRead', handleMessagesRead);
+        socket.off('new_internship', handleNewInternship);
       };
     }
   }, [activeUser, location.pathname]);
