@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Compass,
   FileCheck,
@@ -85,10 +86,16 @@ export default function Features() {
   ];
 
   return (
-    <section id="features" className="py-20 bg-white dark:bg-slate-950">
+    <section id="features" className="py-20 bg-white dark:bg-slate-950 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-semibold uppercase tracking-wider mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-50px' }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-14"
+        >
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-xs font-semibold uppercase tracking-wider mb-4 shadow-2xs">
             Core Capabilities
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-4">
@@ -97,15 +104,20 @@ export default function Features() {
           <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
             A comprehensive suite of intelligent tools designed specifically for students, enterprise recruiters, mentors, and academic institution leaders.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {featureList.map((feature, idx) => {
             const Icon = feature.icon;
             return (
-              <div
+              <motion.div
                 key={idx}
-                className={`bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 text-left flex flex-col justify-between cursor-pointer ${feature.hoverBorder}`}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-30px' }}
+                transition={{ duration: 0.45, delay: idx * 0.08 }}
+                whileHover={{ translateY: -6, scale: 1.01 }}
+                className={`bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 text-left flex flex-col justify-between cursor-pointer card-glow-light card-glow-dark ${feature.hoverBorder}`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-6">
@@ -131,7 +143,7 @@ export default function Features() {
                   <span>Explore Feature</span>
                   <ArrowUpRight size={16} />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
