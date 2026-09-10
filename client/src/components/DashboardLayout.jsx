@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import PageTransition from './common/PageTransition';
 import {
   Layers,
   LogOut,
@@ -445,20 +447,29 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
           <div className="p-3 border-t border-slate-100 dark:border-slate-800 space-y-2 bg-slate-50/50 dark:bg-slate-950/40">
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => setDarkMode(!darkMode)}
               className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'
-                } rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer`}
+                } rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-2xs`}
               title="Toggle Dark/Light Mode"
             >
               <span className="flex items-center gap-2">
-                {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-slate-700" />}
+                <motion.div
+                  key={darkMode ? 'dark' : 'light'}
+                  initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+                  animate={{ rotate: 0, opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  {darkMode ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} className="text-slate-700" />}
+                </motion.div>
                 {!isSidebarCollapsed && <span>{darkMode ? 'Dark Mode' : 'Light Mode'}</span>}
               </span>
               {!isSidebarCollapsed && (
                 <span className="text-[10px] text-slate-400 uppercase font-black">{darkMode ? 'ON' : 'OFF'}</span>
               )}
-            </button>
+            </motion.button>
 
             <div
               className={`flex items-center ${isSidebarCollapsed ? 'justify-center p-2' : 'justify-between p-2.5'
@@ -624,12 +635,18 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
         {isMessagesPage ? (
           <main className="flex-1 p-2 sm:p-4 max-w-7xl w-full mx-auto overflow-hidden flex flex-col min-h-0">
-            {children}
+            <PageTransition key={location.pathname}>
+              {children}
+            </PageTransition>
           </main>
         ) : (
           <>
-            <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl w-full mx-auto animate-in fade-in zoom-in-98 duration-300">
-              {children}
+            <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
+              <AnimatePresence mode="wait">
+                <PageTransition key={location.pathname + (activeTab || '')}>
+                  {children}
+                </PageTransition>
+              </AnimatePresence>
             </main>
 
             <footer className="border-t border-slate-200 dark:border-slate-800 py-4 px-4 sm:px-8 bg-white/50 dark:bg-slate-950/50 mt-auto text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
