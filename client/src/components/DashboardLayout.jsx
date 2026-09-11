@@ -562,15 +562,6 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
           </div>
 
           <div className="flex items-center gap-3">
-            {role === 'student' && (
-              <button
-                onClick={() => navigate('/student/resume-analyzer')}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors text-xs font-extrabold cursor-pointer shadow-2xs"
-              >
-                <BarChart3 size={15} />
-                <span>Analyse ATS</span>
-              </button>
-            )}
 
             <div className="relative hidden md:block w-60 lg:w-72">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

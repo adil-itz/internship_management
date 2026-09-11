@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { uploadResume, deleteResume } from '../services/student.service';
-import { FileText, Upload, Trash2, Download, Eye, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Upload, Trash2, Download, Eye, RefreshCw, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 
-export default function ResumeSection({ resume, onResumeUpdate }) {
+export default function ResumeSection({ resume, onResumeUpdate, onAnalyzeATS }) {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -187,8 +187,15 @@ export default function ResumeSection({ resume, onResumeUpdate }) {
               </p>
             </div>
           </div>
-          
           <div className="flex flex-wrap items-center gap-2">
+            {onAnalyzeATS && (
+              <button
+                onClick={onAnalyzeATS}
+                className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg text-xs font-extrabold flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Sparkles size={14} className="text-amber-400" /> Analyze ATS
+              </button>
+            )}
             <button
               onClick={handleView}
               className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"

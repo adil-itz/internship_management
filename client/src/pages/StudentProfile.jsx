@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import ResumeSection from '../components/ResumeSection';
 import TwoFactorSettings from '../components/TwoFactorSettings';
+import ResumeAnalyzer from './student/ResumeAnalyzer';
 import { getStudentProfile, updateStudentProfile } from '../services/student.service';
 import { 
   User, Mail, Phone, MapPin, Calendar, Briefcase, 
   GraduationCap, Link as LinkIcon, 
-  Globe, Edit2, Check, AlertCircle, Plus, X as XIcon, ChevronDown
+  Globe, Edit2, Check, AlertCircle, Plus, X as XIcon, ChevronDown, Sparkles, BarChart3
 } from 'lucide-react';
 
 export default function StudentProfile({ darkMode, setDarkMode, user: propUser }) {
@@ -20,6 +21,7 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [profileTab, setProfileTab] = useState('details'); // 'details' | 'analyzer'
   const [newSkill, setNewSkill] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -177,7 +179,7 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
 
   return (
     <DashboardLayout user={user} darkMode={darkMode} setDarkMode={setDarkMode} activeTab="profile">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className={`${profileTab === 'analyzer' ? 'max-w-6xl' : 'max-w-4xl'} mx-auto space-y-6 transition-all duration-300`}>
         
         {/* Header Section */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -202,12 +204,44 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
           {!isEditing && (
             <button
               onClick={handleEditClick}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors cursor-pointer shadow-xs"
             >
               <Edit2 size={16} /> Edit Profile
             </button>
           )}
         </div>
+
+        {/* Tab Navigation */}
+        {!isEditing && (
+          <div className="flex items-center gap-2 p-1.5 bg-slate-200/60 dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold">
+            <button
+              onClick={() => setProfileTab('details')}
+              className={`flex-1 py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                profileTab === 'details'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs font-extrabold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <User size={16} />
+              <span>Profile & Resume Info</span>
+            </button>
+
+            <button
+              onClick={() => setProfileTab('analyzer')}
+              className={`flex-1 py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                profileTab === 'analyzer'
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs font-extrabold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Sparkles size={16} className="text-amber-400 animate-pulse" />
+              <span>AI Resume ATS Analyzer</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider font-black">
+                AI Tool
+              </span>
+            </button>
+          </div>
+        )}
 
         {error && (
           <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 flex items-center gap-3 text-rose-600 dark:text-rose-400 text-sm">
@@ -224,7 +258,10 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
         )}
 
         {/* Content Sections */}
-        <div className="space-y-6">
+        {profileTab === 'analyzer' && !isEditing ? (
+          <ResumeAnalyzer embedded={true} profileResume={currentData?.resume} />
+        ) : (
+          <div className="space-y-6">
           
           {/* About / Bio */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6">
@@ -607,11 +644,15 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
             <>
               <ResumeSection 
                 resume={currentData?.resume} 
-                onResumeUpdate={handleResumeUpdate} 
+                onResumeUpdate={handleResumeUpdate}
+                onAnalyzeATS={() => setProfileTab('analyzer')} 
               />
               <TwoFactorSettings />
             </>
           )}
+
+          </div>
+        )}
 
           {/* Action Buttons */}
           {isEditing && (
@@ -634,7 +675,6 @@ export default function StudentProfile({ darkMode, setDarkMode, user: propUser }
           )}
 
         </div>
-      </div>
 
       {/* Unsaved Changes Warning Modal */}
       {showCancelConfirm && (
