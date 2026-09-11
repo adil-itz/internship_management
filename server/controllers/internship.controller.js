@@ -1,5 +1,6 @@
 import Internship from "../models/Internship.js";
 import User from "../models/User.js";
+import { getIo } from "../socket/chat.socket.js";
 
 export const createInternship = async (req, res) => {
   try {
@@ -75,6 +76,16 @@ export const createInternship = async (req, res) => {
       import('../services/notification.service.js').then(({ notifyNewInternship }) => {
         notifyNewInternship(createdInternship, company).catch(console.error);
       });
+      
+      const io = getIo();
+      if (io) {
+        io.emit("new_internship", {
+          title: createdInternship.title,
+          companyName: company.name,
+          location: createdInternship.location,
+          id: createdInternship._id,
+        });
+      }
     }
 
     res.status(201).json({ success: true, internship: createdInternship });

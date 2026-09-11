@@ -52,6 +52,7 @@ import certificateRoutes from "./server/routes/certificate.routes.js";
 import reportRoutes from "./server/routes/report.routes.js";
 import notificationRoutes from "./server/routes/notification.routes.js";
 import chatbotRoutes from "./server/routes/chatbot.routes.js";
+import resumeAnalyzerRoutes from "./server/routes/resumeAnalyzer.routes.js";
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -70,6 +71,7 @@ app.use("/api/certificates", certificateRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/resume-analyzer", resumeAnalyzerRoutes);
 
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));

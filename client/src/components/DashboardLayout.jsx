@@ -126,13 +126,35 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
     if (socket) {
       const handleNewMessage = () => fetchUnread();
       const handleMessagesRead = () => fetchUnread();
+      
+      const handleNewInternship = (data) => {
+        if ('Notification' in window) {
+          if (Notification.permission === 'granted') {
+            new Notification('New Internship Alert! 🚀', {
+              body: `${data.companyName} just posted: ${data.title} (${data.location})`,
+            });
+          } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                new Notification('New Internship Alert! 🚀', {
+                  body: `${data.companyName} just posted: ${data.title} (${data.location})`,
+                });
+              }
+            });
+          }
+        }
+      };
+
       socket.on('newMessage', handleNewMessage);
       socket.on('newMessageNotification', handleNewMessage);
       socket.on('messagesRead', handleMessagesRead);
+      socket.on('new_internship', handleNewInternship);
+
       return () => {
         socket.off('newMessage', handleNewMessage);
         socket.off('newMessageNotification', handleNewMessage);
         socket.off('messagesRead', handleMessagesRead);
+        socket.off('new_internship', handleNewInternship);
       };
     }
   }, [activeUser, location.pathname]);
@@ -540,6 +562,15 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
           </div>
 
           <div className="flex items-center gap-3">
+            {role === 'student' && (
+              <button
+                onClick={() => navigate('/student/resume-analyzer')}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors text-xs font-extrabold cursor-pointer shadow-2xs"
+              >
+                <BarChart3 size={15} />
+                <span>Analyse ATS</span>
+              </button>
+            )}
 
             <div className="relative hidden md:block w-60 lg:w-72">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

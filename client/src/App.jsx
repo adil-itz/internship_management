@@ -23,6 +23,7 @@ import MentorAttendance from './pages/mentor/MentorAttendance';
 import AdminAttendance from './pages/admin/AdminAttendance';
 import MentorWorkLogs from './pages/mentor/MentorWorkLogs';
 import AdminWorkLogs from './pages/admin/AdminWorkLogs';
+import ResumeAnalyzer from './pages/student/ResumeAnalyzer';
 import ChatPage from './pages/ChatPage';
 import FloatingChatbot from './components/FloatingChatbot';
 
@@ -250,6 +251,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <ResourceExploration darkMode={darkMode} setDarkMode={setDarkMode} />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/resume-analyzer"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ResumeAnalyzer darkMode={darkMode} setDarkMode={setDarkMode} />
             </ProtectedRoute>
           }
         />
