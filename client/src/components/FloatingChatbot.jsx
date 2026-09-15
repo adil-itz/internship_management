@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 
 // Use relative URL to leverage Vite proxy in vite.config.js
 const API_URL = '/api/chatbot/ask';
@@ -16,6 +17,7 @@ const FloatingChatbot = () => {
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
   const formRef = useRef(null);
+  const containerRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,6 +26,22 @@ const FloatingChatbot = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -114,10 +132,16 @@ const FloatingChatbot = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <motion.div 
+      ref={containerRef}
+      drag
+      dragMomentum={false}
+      className="fixed bottom-6 right-6 z-50 flex flex-col items-end"
+      style={{ touchAction: "none" }}
+    >
       {isOpen && (
         <div className="bg-white w-80 h-96 rounded-xl shadow-2xl flex flex-col border border-gray-200 overflow-hidden mb-4 transition-all duration-300">
-          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center cursor-move">
             <div className="font-semibold flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
@@ -203,7 +227,7 @@ const FloatingChatbot = () => {
           </svg>
         )}
       </button>
-    </div>
+    </motion.div>
   );
 };
 

@@ -657,7 +657,7 @@ export default function DashboardLayout({ children, user, darkMode, setDarkMode,
 
         {isMessagesPage ? (
           <main className="flex-1 p-2 sm:p-4 max-w-7xl w-full mx-auto overflow-hidden flex flex-col min-h-0">
-            <PageTransition key={location.pathname}>
+            <PageTransition key={location.pathname} className="h-full flex flex-col flex-1 min-h-0">
               {children}
             </PageTransition>
           </main>
