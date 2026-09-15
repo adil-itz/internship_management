@@ -10,15 +10,25 @@ import dns from 'dns';
  */
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
+    const resendKey = process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.trim() : null;
+    const brevoKey = process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim() : null;
+
+    console.log(`[EMAIL_DEBUG] --------------------------------------------------`);
+    console.log(`[EMAIL_DEBUG] Initiating email to: ${to}`);
+    console.log(`[EMAIL_DEBUG] ENV RESEND_API_KEY: ${resendKey ? 'DETECTED (' + resendKey.substring(0, 5) + '...)' : 'NOT FOUND'}`);
+    console.log(`[EMAIL_DEBUG] ENV BREVO_API_KEY: ${brevoKey ? 'DETECTED' : 'NOT FOUND'}`);
+    console.log(`[EMAIL_DEBUG] ENV EMAIL_USER: ${process.env.EMAIL_USER || 'NOT FOUND'}`);
+    console.log(`[EMAIL_DEBUG] --------------------------------------------------`);
+
     // ----------------------------------------------------
     // 1. Check if Resend API key is available (HTTPS Port 443 - Works 100% on Render)
     // ----------------------------------------------------
-    if (process.env.RESEND_API_KEY) {
-      console.log(`🌐 Sending email via Resend HTTPS API to ${to}...`);
+    if (resendKey) {
+      console.log(`🌐 [EMAIL] Sending via Resend HTTPS API to ${to}...`);
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${resendKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -32,22 +42,23 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
 
       const data = await response.json();
       if (!response.ok) {
+        console.error(`❌ [EMAIL] Resend API Error:`, data);
         throw new Error(data.message || JSON.stringify(data));
       }
 
-      console.log(`✉️ Email sent successfully via Resend to ${to}: ${data.id}`);
+      console.log(`✉️ [EMAIL] Sent successfully via Resend to ${to}: ${data.id}`);
       return { success: true, messageId: data.id };
     }
 
     // ----------------------------------------------------
     // 2. Check if Brevo (Sendinblue) API key is available (HTTPS Port 443)
     // ----------------------------------------------------
-    if (process.env.BREVO_API_KEY) {
-      console.log(`🌐 Sending email via Brevo HTTPS API to ${to}...`);
+    if (brevoKey) {
+      console.log(`🌐 [EMAIL] Sending via Brevo HTTPS API to ${to}...`);
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
-          'api-key': process.env.BREVO_API_KEY,
+          'api-key': brevoKey,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
@@ -62,16 +73,19 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
 
       const data = await response.json();
       if (!response.ok) {
+        console.error(`❌ [EMAIL] Brevo API Error:`, data);
         throw new Error(data.message || JSON.stringify(data));
       }
 
-      console.log(`✉️ Email sent successfully via Brevo to ${to}: ${data.messageId}`);
+      console.log(`✉️ [EMAIL] Sent successfully via Brevo to ${to}: ${data.messageId}`);
       return { success: true, messageId: data.messageId };
     }
 
     // ----------------------------------------------------
     // 3. Fallback to Nodemailer SMTP (Localhost / standard SMTP)
     // ----------------------------------------------------
+    console.log(`⚠️ [EMAIL] Neither RESEND_API_KEY nor BREVO_API_KEY found! Falling back to Nodemailer SMTP...`);
+    
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
       console.warn('⚠️ EMAIL_USER or EMAIL_PASS is missing in environment variables!');
     }
@@ -79,6 +93,8 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
     const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
     const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 465;
     const isSecure = port === 465;
+
+    console.log(`🔌 [EMAIL] Connecting to SMTP Host: ${host}, Port: ${port}, Secure: ${isSecure}`);
 
     const transporter = nodemailer.createTransport({
       host,
@@ -109,7 +125,7 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✉️ Email sent successfully via SMTP to ${to}: ${info.messageId}`);
+    console.log(`✉️ [EMAIL] Sent successfully via SMTP to ${to}: ${info.messageId}`);
     return { success: true, messageId: info.messageId };
 
   } catch (error) {
