@@ -1,16 +1,27 @@
 import nodemailer from 'nodemailer';
+import dns from 'dns';
 
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
-    const isSecure = process.env.EMAIL_PORT === '465';
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.warn('⚠️ EMAIL_USER or EMAIL_PASS is missing in environment variables!');
+    }
+
+    const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+    const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 465;
+    const isSecure = port === 465;
+
     const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587,
-      secure: isSecure,
-      family: 4, // Force IPv4 to avoid ENETUNREACH errors on cloud platforms like Render
+      host,
+      port,
+      secure: isSecure, // true for 465, false for 587
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
+      },
+      // Custom DNS lookup to strictly enforce IPv4 resolution and prevent ENETUNREACH IPv6 errors on Render
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
       },
       tls: {
         rejectUnauthorized: false
