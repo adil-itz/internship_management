@@ -42,7 +42,7 @@ export const askChatbot = async (req, res) => {
 
     const chatCompletion = await groq.chat.completions.create({
       messages,
-      model: 'llama-3.1-8b-instant',
+      model: 'llama3-8b-8192',
       temperature: 0.5,
       max_tokens: 500,
     });
