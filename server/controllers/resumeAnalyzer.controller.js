@@ -50,7 +50,7 @@ export const analyzeResume = async (req, res) => {
 
     const chatCompletion = await groq.chat.completions.create({
       messages,
-      model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.2,
       max_tokens: 800,
       response_format: { type: 'json_object' },
