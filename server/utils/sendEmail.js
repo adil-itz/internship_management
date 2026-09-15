@@ -20,10 +20,11 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
     console.log(`[EMAIL_DEBUG] --------------------------------------------------`);
 
     // ----------------------------------------------------
-    // 1. Check if Brevo API key is available (Supports ANY recipient address on free tier)
+    // 1. Try Brevo HTTPS API FIRST (Supports ANY recipient address on free tier)
     // ----------------------------------------------------
     if (brevoKey) {
       console.log(`🌐 [EMAIL] Sending via Brevo HTTPS API to ${to}...`);
+      const senderEmail = process.env.EMAIL_USER || 'skadil63718@gmail.com';
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
@@ -32,7 +33,7 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
           'Accept': 'application/json',
         },
         body: JSON.stringify({
-          sender: { email: process.env.EMAIL_USER || 'noreply@internflow.com', name: 'InternFlow' },
+          sender: { email: senderEmail, name: 'InternFlow' },
           to: [{ email: to }],
           subject: subject,
           htmlContent: html || text,
@@ -51,7 +52,7 @@ export const sendEmail = async ({ to, subject, html, text, attachments }) => {
     }
 
     // ----------------------------------------------------
-    // 2. Check if Resend API key is available
+    // 2. Try Resend HTTPS API (Only if Brevo is not configured)
     // ----------------------------------------------------
     if (resendKey) {
       console.log(`🌐 [EMAIL] Sending via Resend HTTPS API to ${to}...`);
