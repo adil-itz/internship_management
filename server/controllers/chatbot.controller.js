@@ -42,9 +42,9 @@ export const askChatbot = async (req, res) => {
 
     const chatCompletion = await groq.chat.completions.create({
       messages,
-      model: 'qwen/qwen3.8-27b',
+      model: 'llama-3.3-70b-versatile',
       temperature: 0.5,
-      max_tokens: 1024,
+      max_tokens: 500,
     });
 
     const reply = chatCompletion.choices[0]?.message?.content || "I'm sorry, I couldn't process that.";
