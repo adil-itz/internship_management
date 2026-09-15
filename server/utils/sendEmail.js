@@ -2,14 +2,19 @@ import nodemailer from 'nodemailer';
 
 export const sendEmail = async ({ to, subject, html, text, attachments }) => {
   try {
+    const isSecure = process.env.EMAIL_PORT === '465';
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT) : 587,
-      secure: false,
+      secure: isSecure,
+      family: 4, // Force IPv4 to avoid ENETUNREACH errors on cloud platforms like Render
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     const mailOptions = {
