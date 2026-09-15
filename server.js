@@ -76,9 +76,12 @@ app.use("/api/resume-analyzer", resumeAnalyzerRoutes);
 // Static file serving for uploads
 app.use("/uploads", express.static(path.join(__dirname, "server", "uploads")));
 
-// Root route
-app.get("/", (req, res) => {
-  res.send("API is running...");
+// Serve static build files from React frontend
+app.use(express.static(path.join(__dirname, "client", "dist")));
+
+// Catch-all route to serve index.html for React SPA pages
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "client", "dist", "index.html"));
 });
 
 // Error handling middleware (if created later)
